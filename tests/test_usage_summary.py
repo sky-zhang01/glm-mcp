@@ -7,10 +7,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from unittest.mock import patch
 
-import pytest
-
 from glm_mcp.tools.usage_summary import glm_usage_summary
-
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -233,6 +230,7 @@ def test_multiple_records_same_tool_accumulate(tmp_path):
 def test_glm_usage_summary_registered_in_server():
     """UT-SUM-10: glm_usage_summary is registered as an MCP tool in server.py."""
     import asyncio
+
     from glm_mcp.server import mcp
     tool = asyncio.run(mcp.get_tool("glm_usage_summary"))
     assert tool is not None

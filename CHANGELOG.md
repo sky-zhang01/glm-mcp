@@ -7,6 +7,27 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ---
 
+## [0.3.0] - 2026-02-21
+
+### Added
+
+- **`glm_usage_summary` MCP tool**: query token usage from `~/.glm-mcp/usage.jsonl`.
+  - Parameters: `days` (int, default 7), `model` (str, optional filter).
+  - Returns: `period`, `total_input_tokens`, `total_output_tokens`, `record_count`,
+    `by_tool` (call count per tool), `by_model` (call count per model).
+  - Malformed lines and invalid timestamps are silently skipped.
+
+### Tests
+
+- 12 new unit tests (UT-SUM-01 ~ UT-SUM-12).
+- Total: 52 UT, 100% coverage.
+
+### Chore
+
+- ruff `per-file-ignores`: exclude E501 from `tests/**` (test data lines are intentionally wide).
+
+---
+
 ## [0.2.0] - 2026-02-21
 
 ### Added
