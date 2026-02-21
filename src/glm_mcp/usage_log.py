@@ -4,10 +4,13 @@ import logging
 import os
 from datetime import datetime, timezone
 from pathlib import Path
+from typing import Literal
 
 _LOG_FILE = "usage.jsonl"
 
 logger = logging.getLogger(__name__)
+
+FallbackReason = Literal["429", "503", "peak_hours", "timeout", "connection"]
 
 
 def _get_log_dir() -> Path:
@@ -20,7 +23,15 @@ def _get_log_dir() -> Path:
     return Path(env) if env else Path.home() / ".glm-mcp"
 
 
-def log_usage(tool: str, model: str, input_tokens: int, output_tokens: int) -> None:
+def log_usage(
+    tool: str,
+    model: str,
+    input_tokens: int,
+    output_tokens: int,
+    fallback_used: bool = False,
+    original_model: str | None = None,
+    fallback_reason: FallbackReason | None = None,
+) -> None:
     """Append one token usage record to the usage log file.
 
     Args:
@@ -28,6 +39,10 @@ def log_usage(tool: str, model: str, input_tokens: int, output_tokens: int) -> N
         model: The GLM model that was called.
         input_tokens: Number of prompt/input tokens consumed.
         output_tokens: Number of completion/output tokens consumed.
+        fallback_used: Whether a fallback model was used instead of the primary.
+        original_model: The originally requested model (when fallback_used=True).
+        fallback_reason: Why fallback was triggered
+            ('429', '503', 'peak_hours', 'timeout', 'connection').
 
     Note:
         Best-effort: failures are logged as warnings so callers are never broken.
@@ -41,6 +56,9 @@ def log_usage(tool: str, model: str, input_tokens: int, output_tokens: int) -> N
             "model": model,
             "input_tokens": input_tokens,
             "output_tokens": output_tokens,
+            "fallback_used": fallback_used,
+            "original_model": original_model,
+            "fallback_reason": fallback_reason,
         }
         with (log_dir / _LOG_FILE).open("a", encoding="utf-8") as f:
             f.write(json.dumps(entry) + "\n")
