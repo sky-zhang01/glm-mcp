@@ -3,12 +3,14 @@ import asyncio
 from unittest.mock import MagicMock, patch
 
 
-def test_server_registers_two_tools():
-    """FastMCP server exposes glm_chat and glm_embed tools."""
+def test_server_registers_four_tools():
+    """FastMCP server exposes glm_chat, glm_embed, glm_usage_summary, and glm_translate tools."""
     from glm_mcp.server import mcp
 
     assert asyncio.run(mcp.get_tool("glm_chat")) is not None
     assert asyncio.run(mcp.get_tool("glm_embed")) is not None
+    assert asyncio.run(mcp.get_tool("glm_usage_summary")) is not None
+    assert asyncio.run(mcp.get_tool("glm_translate")) is not None
 
 
 def test_mcp_is_accessible_at_module_level():

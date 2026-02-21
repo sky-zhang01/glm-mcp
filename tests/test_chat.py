@@ -7,6 +7,7 @@ import pytest
 from openai import APIConnectionError, APIStatusError, APITimeoutError
 
 import glm_mcp.tools.chat as chat_module
+import glm_mcp.tools._core as core_module
 
 
 def _make_request() -> httpx.Request:
@@ -21,7 +22,7 @@ def test_glm_chat_returns_text():
     mock_client = MagicMock()
     mock_client.chat.completions.create.return_value = mock_response
 
-    with patch("glm_mcp.tools.chat.get_client", return_value=mock_client):
+    with patch("glm_mcp.tools._core.get_client", return_value=mock_client):
         from glm_mcp.tools.chat import glm_chat
         result = glm_chat("Hello")
 
@@ -36,7 +37,7 @@ def test_glm_chat_with_system_prompt_includes_system_message():
     mock_client = MagicMock()
     mock_client.chat.completions.create.return_value = mock_response
 
-    with patch("glm_mcp.tools.chat.get_client", return_value=mock_client):
+    with patch("glm_mcp.tools._core.get_client", return_value=mock_client):
         from glm_mcp.tools.chat import glm_chat
         glm_chat("Hello", system="Be helpful")
 
@@ -54,7 +55,7 @@ def test_glm_chat_without_system_excludes_system_message():
     mock_client = MagicMock()
     mock_client.chat.completions.create.return_value = mock_response
 
-    with patch("glm_mcp.tools.chat.get_client", return_value=mock_client):
+    with patch("glm_mcp.tools._core.get_client", return_value=mock_client):
         from glm_mcp.tools.chat import glm_chat
         glm_chat("Hello")
 
@@ -72,7 +73,7 @@ def test_glm_chat_uses_specified_model():
     mock_client = MagicMock()
     mock_client.chat.completions.create.return_value = mock_response
 
-    with patch("glm_mcp.tools.chat.get_client", return_value=mock_client):
+    with patch("glm_mcp.tools._core.get_client", return_value=mock_client):
         from glm_mcp.tools.chat import glm_chat
         glm_chat("Hello", model="glm-4")
 
@@ -88,7 +89,7 @@ def test_glm_chat_uses_default_model():
     mock_client = MagicMock()
     mock_client.chat.completions.create.return_value = mock_response
 
-    with patch("glm_mcp.tools.chat.get_client", return_value=mock_client):
+    with patch("glm_mcp.tools._core.get_client", return_value=mock_client):
         from glm_mcp.tools.chat import glm_chat
         glm_chat("Hello")
 
@@ -106,8 +107,8 @@ def test_glm_chat_logs_token_usage():
     mock_client = MagicMock()
     mock_client.chat.completions.create.return_value = mock_response
 
-    with patch("glm_mcp.tools.chat.get_client", return_value=mock_client), \
-         patch("glm_mcp.tools.chat.log_usage") as mock_log:
+    with patch("glm_mcp.tools._core.get_client", return_value=mock_client), \
+         patch("glm_mcp.tools._core.log_usage") as mock_log:
         from glm_mcp.tools.chat import glm_chat
         glm_chat("Hello", model="glm-4-flash")
 
@@ -124,7 +125,7 @@ def test_glm_chat_raises_runtime_error_on_timeout():
         request=_make_request()
     )
 
-    with patch("glm_mcp.tools.chat.get_client", return_value=mock_client):
+    with patch("glm_mcp.tools._core.get_client", return_value=mock_client):
         from glm_mcp.tools.chat import glm_chat
         with pytest.raises(RuntimeError, match="timed out"):
             glm_chat("Hello", auto_fallback=False)
@@ -137,7 +138,7 @@ def test_glm_chat_raises_runtime_error_on_connection_error():
         request=_make_request()
     )
 
-    with patch("glm_mcp.tools.chat.get_client", return_value=mock_client):
+    with patch("glm_mcp.tools._core.get_client", return_value=mock_client):
         from glm_mcp.tools.chat import glm_chat
         with pytest.raises(RuntimeError, match="Could not reach"):
             glm_chat("Hello", auto_fallback=False)
@@ -153,7 +154,7 @@ def test_glm_chat_raises_runtime_error_on_api_status_error():
         "Rate limited", response=response, body=None
     )
 
-    with patch("glm_mcp.tools.chat.get_client", return_value=mock_client):
+    with patch("glm_mcp.tools._core.get_client", return_value=mock_client):
         from glm_mcp.tools.chat import glm_chat
         with pytest.raises(RuntimeError, match="429"):
             glm_chat("Hello", auto_fallback=False)
@@ -167,7 +168,7 @@ def test_glm_chat_raises_runtime_error_when_content_is_none():
     mock_client = MagicMock()
     mock_client.chat.completions.create.return_value = mock_response
 
-    with patch("glm_mcp.tools.chat.get_client", return_value=mock_client):
+    with patch("glm_mcp.tools._core.get_client", return_value=mock_client):
         from glm_mcp.tools.chat import glm_chat
         with pytest.raises(RuntimeError, match="no text content"):
             glm_chat("Hello")
@@ -189,7 +190,7 @@ def test_glm_chat_multi_turn_passes_messages_to_api():
     mock_client = MagicMock()
     mock_client.chat.completions.create.return_value = mock_response
 
-    with patch("glm_mcp.tools.chat.get_client", return_value=mock_client):
+    with patch("glm_mcp.tools._core.get_client", return_value=mock_client):
         from glm_mcp.tools.chat import glm_chat
         result = glm_chat(messages=history)
 
@@ -207,7 +208,7 @@ def test_glm_chat_multi_turn_does_not_append_extra_user_message():
     mock_client = MagicMock()
     mock_client.chat.completions.create.return_value = mock_response
 
-    with patch("glm_mcp.tools.chat.get_client", return_value=mock_client):
+    with patch("glm_mcp.tools._core.get_client", return_value=mock_client):
         from glm_mcp.tools.chat import glm_chat
         glm_chat(messages=history)
 
@@ -218,7 +219,7 @@ def test_glm_chat_multi_turn_does_not_append_extra_user_message():
 
 def test_glm_chat_raises_value_error_when_both_message_and_messages_provided():
     """UT-CHT-13: glm_chat raises ValueError when both message and messages are given."""
-    with patch("glm_mcp.tools.chat.get_client"):
+    with patch("glm_mcp.tools._core.get_client"):
         from glm_mcp.tools.chat import glm_chat
         with pytest.raises(ValueError, match="message"):
             glm_chat(message="Hello", messages=[{"role": "user", "content": "Hi"}])
@@ -226,7 +227,7 @@ def test_glm_chat_raises_value_error_when_both_message_and_messages_provided():
 
 def test_glm_chat_raises_value_error_for_empty_messages_list():
     """UT-CHT-14: glm_chat raises ValueError when messages is an empty list."""
-    with patch("glm_mcp.tools.chat.get_client"):
+    with patch("glm_mcp.tools._core.get_client"):
         from glm_mcp.tools.chat import glm_chat
         with pytest.raises(ValueError, match="empty"):
             glm_chat(messages=[])
@@ -243,8 +244,8 @@ def test_glm_chat_multi_turn_logs_token_usage():
     mock_client = MagicMock()
     mock_client.chat.completions.create.return_value = mock_response
 
-    with patch("glm_mcp.tools.chat.get_client", return_value=mock_client), \
-         patch("glm_mcp.tools.chat.log_usage") as mock_log:
+    with patch("glm_mcp.tools._core.get_client", return_value=mock_client), \
+         patch("glm_mcp.tools._core.log_usage") as mock_log:
         from glm_mcp.tools.chat import glm_chat
         glm_chat(messages=history, model="glm-4")
 
@@ -263,7 +264,7 @@ def test_glm_chat_multi_turn_ignores_system_param():
     mock_client = MagicMock()
     mock_client.chat.completions.create.return_value = mock_response
 
-    with patch("glm_mcp.tools.chat.get_client", return_value=mock_client):
+    with patch("glm_mcp.tools._core.get_client", return_value=mock_client):
         from glm_mcp.tools.chat import glm_chat
         glm_chat(messages=history, system="Ignored system prompt")
 
@@ -280,7 +281,7 @@ def test_glm_chat_single_turn_still_works_as_positional():
     mock_client = MagicMock()
     mock_client.chat.completions.create.return_value = mock_response
 
-    with patch("glm_mcp.tools.chat.get_client", return_value=mock_client):
+    with patch("glm_mcp.tools._core.get_client", return_value=mock_client):
         from glm_mcp.tools.chat import glm_chat
         result = glm_chat("Hello")  # positional arg
 
@@ -301,7 +302,7 @@ def test_glm_chat_raises_descriptive_error_on_context_window_exceeded():
         "context length exceeded", response=response, body=None
     )
 
-    with patch("glm_mcp.tools.chat.get_client", return_value=mock_client):
+    with patch("glm_mcp.tools._core.get_client", return_value=mock_client):
         from glm_mcp.tools.chat import glm_chat
         with pytest.raises(RuntimeError, match="context window"):
             glm_chat("Hello")
@@ -322,8 +323,8 @@ def test_glm_chat_auto_fallback_on_429_uses_default_fallback_model():
         APIStatusError("Rate limited", response=response_429, body=None),
         fallback_response,
     ]
-    with patch("glm_mcp.tools.chat.get_client", return_value=mock_client), \
-         patch("glm_mcp.tools.chat.log_usage") as mock_log:
+    with patch("glm_mcp.tools._core.get_client", return_value=mock_client), \
+         patch("glm_mcp.tools._core.log_usage") as mock_log:
         from glm_mcp.tools.chat import glm_chat
         result = glm_chat("Hello", model="GLM-5", auto_fallback=True)
     assert result == "Fallback response"
@@ -348,8 +349,8 @@ def test_glm_chat_auto_fallback_on_429_uses_specified_fallback_model():
         APIStatusError("Rate limited", response=response_429, body=None),
         fallback_response,
     ]
-    with patch("glm_mcp.tools.chat.get_client", return_value=mock_client), \
-         patch("glm_mcp.tools.chat.log_usage") as mock_log:
+    with patch("glm_mcp.tools._core.get_client", return_value=mock_client), \
+         patch("glm_mcp.tools._core.log_usage") as mock_log:
         from glm_mcp.tools.chat import glm_chat
         result = glm_chat("Hello", model="GLM-5", fallback_model="glm-4-flash", auto_fallback=True)
     assert result == "Flash fallback"
@@ -368,7 +369,7 @@ def test_glm_chat_no_fallback_on_429_when_auto_fallback_disabled():
     mock_client.chat.completions.create.side_effect = APIStatusError(
         "Rate limited", response=response_429, body=None
     )
-    with patch("glm_mcp.tools.chat.get_client", return_value=mock_client):
+    with patch("glm_mcp.tools._core.get_client", return_value=mock_client):
         from glm_mcp.tools.chat import glm_chat
         with pytest.raises(RuntimeError, match="429"):
             glm_chat("Hello", auto_fallback=False)
@@ -386,8 +387,8 @@ def test_glm_chat_auto_fallback_on_503():
         APIStatusError("Service unavailable", response=response_503, body=None),
         fallback_response,
     ]
-    with patch("glm_mcp.tools.chat.get_client", return_value=mock_client), \
-         patch("glm_mcp.tools.chat.log_usage") as mock_log:
+    with patch("glm_mcp.tools._core.get_client", return_value=mock_client), \
+         patch("glm_mcp.tools._core.log_usage") as mock_log:
         from glm_mcp.tools.chat import glm_chat
         result = glm_chat("Hello", model="GLM-5", auto_fallback=True)
     assert result == "503 fallback"
@@ -405,7 +406,7 @@ def test_glm_chat_no_fallback_on_non_retriable_status():
         mock_client.chat.completions.create.side_effect = APIStatusError(
             f"Error {status_code}", response=response, body=None
         )
-        with patch("glm_mcp.tools.chat.get_client", return_value=mock_client):
+        with patch("glm_mcp.tools._core.get_client", return_value=mock_client):
             from glm_mcp.tools.chat import glm_chat
             with pytest.raises(RuntimeError):
                 glm_chat("Hello", auto_fallback=True)
@@ -421,9 +422,9 @@ def test_glm_chat_avoid_peak_hours_during_peak_skips_primary():
     fallback_response.usage.completion_tokens = 3
     mock_client = MagicMock()
     mock_client.chat.completions.create.return_value = fallback_response
-    with patch("glm_mcp.tools.chat.get_client", return_value=mock_client), \
-         patch("glm_mcp.tools.chat._is_peak_hours", return_value=True), \
-         patch("glm_mcp.tools.chat.log_usage") as mock_log:
+    with patch("glm_mcp.tools._core.get_client", return_value=mock_client), \
+         patch("glm_mcp.tools._core._is_peak_hours", return_value=True), \
+         patch("glm_mcp.tools._core.log_usage") as mock_log:
         from glm_mcp.tools.chat import glm_chat
         result = glm_chat("Hello", model="GLM-5", auto_fallback=True, avoid_peak_hours=True)
     assert result == "Peak skip response"
@@ -445,9 +446,9 @@ def test_glm_chat_avoid_peak_hours_outside_peak_uses_primary():
     primary_response.usage.completion_tokens = 5
     mock_client = MagicMock()
     mock_client.chat.completions.create.return_value = primary_response
-    with patch("glm_mcp.tools.chat.get_client", return_value=mock_client), \
-         patch("glm_mcp.tools.chat._is_peak_hours", return_value=False), \
-         patch("glm_mcp.tools.chat.log_usage") as mock_log:
+    with patch("glm_mcp.tools._core.get_client", return_value=mock_client), \
+         patch("glm_mcp.tools._core._is_peak_hours", return_value=False), \
+         patch("glm_mcp.tools._core.log_usage") as mock_log:
         from glm_mcp.tools.chat import glm_chat
         result = glm_chat("Hello", model="GLM-5", auto_fallback=True, avoid_peak_hours=True)
     assert result == "Primary response"
@@ -467,9 +468,9 @@ def test_glm_chat_auto_fallback_false_overrides_avoid_peak_hours():
     primary_response.usage.completion_tokens = 5
     mock_client = MagicMock()
     mock_client.chat.completions.create.return_value = primary_response
-    with patch("glm_mcp.tools.chat.get_client", return_value=mock_client), \
-         patch("glm_mcp.tools.chat._is_peak_hours", return_value=True), \
-         patch("glm_mcp.tools.chat.log_usage"):
+    with patch("glm_mcp.tools._core.get_client", return_value=mock_client), \
+         patch("glm_mcp.tools._core._is_peak_hours", return_value=True), \
+         patch("glm_mcp.tools._core.log_usage"):
         from glm_mcp.tools.chat import glm_chat
         result = glm_chat("Hello", model="GLM-5", auto_fallback=False, avoid_peak_hours=True)
     assert result == "Primary despite peak"
@@ -486,7 +487,7 @@ def test_glm_chat_raises_runtime_error_when_fallback_also_fails():
         APIStatusError("Rate limited", response=response_429, body=None),
         APIStatusError("Server error", response=response_500, body=None),
     ]
-    with patch("glm_mcp.tools.chat.get_client", return_value=mock_client):
+    with patch("glm_mcp.tools._core.get_client", return_value=mock_client):
         from glm_mcp.tools.chat import glm_chat
         with pytest.raises(RuntimeError):
             glm_chat("Hello", auto_fallback=True)
@@ -507,8 +508,8 @@ def test_glm_chat_fallback_reason_distinguishes_trigger():
         APIStatusError("Unavailable", response=response_503, body=None),
         fallback_response,
     ]
-    with patch("glm_mcp.tools.chat.get_client", return_value=mock_client), \
-         patch("glm_mcp.tools.chat.log_usage") as mock_log:
+    with patch("glm_mcp.tools._core.get_client", return_value=mock_client), \
+         patch("glm_mcp.tools._core.log_usage") as mock_log:
         from glm_mcp.tools.chat import glm_chat
         glm_chat("Hello", model="GLM-5", auto_fallback=True)
     call_kwargs = mock_log.call_args.kwargs
@@ -523,8 +524,8 @@ def test_glm_chat_success_logs_fallback_used_false():
     mock_response.usage.completion_tokens = 10
     mock_client = MagicMock()
     mock_client.chat.completions.create.return_value = mock_response
-    with patch("glm_mcp.tools.chat.get_client", return_value=mock_client), \
-         patch("glm_mcp.tools.chat.log_usage") as mock_log:
+    with patch("glm_mcp.tools._core.get_client", return_value=mock_client), \
+         patch("glm_mcp.tools._core.log_usage") as mock_log:
         from glm_mcp.tools.chat import glm_chat
         glm_chat("Hello", model="GLM-5", auto_fallback=True)
     mock_log.assert_called_once_with(
@@ -541,19 +542,19 @@ def test_is_peak_hours_returns_bool():
 
     # Peak: UTC+8 15:00 → hour=15 ∈ [14,18) → True
     peak_time = datetime.datetime(2026, 2, 22, 15, 0, 0, tzinfo=datetime.timezone(datetime.timedelta(hours=8)))
-    with patch("glm_mcp.tools.chat.datetime") as mock_dt:
+    with patch("glm_mcp.tools._core.datetime") as mock_dt:
         mock_dt.now.return_value = peak_time
-        result = chat_module._is_peak_hours()
-        mock_dt.now.assert_called_once_with(chat_module._TZ_UTC8)
+        result = core_module._is_peak_hours()
+        mock_dt.now.assert_called_once_with(core_module._TZ_UTC8)
         assert isinstance(result, bool)
         assert result is True
 
     # Non-peak: UTC+8 10:00 → hour=10 ∉ [14,18) → False
     non_peak_time = datetime.datetime(2026, 2, 22, 10, 0, 0, tzinfo=datetime.timezone(datetime.timedelta(hours=8)))
-    with patch("glm_mcp.tools.chat.datetime") as mock_dt:
+    with patch("glm_mcp.tools._core.datetime") as mock_dt:
         mock_dt.now.return_value = non_peak_time
-        result = chat_module._is_peak_hours()
-        mock_dt.now.assert_called_once_with(chat_module._TZ_UTC8)
+        result = core_module._is_peak_hours()
+        mock_dt.now.assert_called_once_with(core_module._TZ_UTC8)
         assert isinstance(result, bool)
         assert result is False
 
@@ -571,7 +572,7 @@ def test_glm_chat_raises_runtime_error_when_fallback_returns_none_content():
         APIStatusError("Rate limited", response=response_429, body=None),
         fallback_response,
     ]
-    with patch("glm_mcp.tools.chat.get_client", return_value=mock_client):
+    with patch("glm_mcp.tools._core.get_client", return_value=mock_client):
         from glm_mcp.tools.chat import glm_chat
         with pytest.raises(RuntimeError, match="no text content"):
             glm_chat("Hello", auto_fallback=True)
@@ -586,7 +587,7 @@ def test_glm_chat_raises_runtime_error_when_fallback_raises_runtime_error():
         APIStatusError("Rate limited", response=response_429, body=None),
         APITimeoutError(request=_make_request()),
     ]
-    with patch("glm_mcp.tools.chat.get_client", return_value=mock_client):
+    with patch("glm_mcp.tools._core.get_client", return_value=mock_client):
         from glm_mcp.tools.chat import glm_chat
         with pytest.raises(RuntimeError, match="also failed"):
             glm_chat("Hello", auto_fallback=True)
@@ -607,8 +608,8 @@ def test_glm_chat_auto_fallback_on_timeout():
         APITimeoutError(request=_make_request()),
         fallback_response,
     ]
-    with patch("glm_mcp.tools.chat.get_client", return_value=mock_client), \
-         patch("glm_mcp.tools.chat.log_usage") as mock_log:
+    with patch("glm_mcp.tools._core.get_client", return_value=mock_client), \
+         patch("glm_mcp.tools._core.log_usage") as mock_log:
         from glm_mcp.tools.chat import glm_chat
         result = glm_chat("Hello", model="GLM-5", auto_fallback=True)
     assert result == "Timeout fallback"
@@ -632,8 +633,8 @@ def test_glm_chat_auto_fallback_on_connection_error():
         APIConnectionError(request=_make_request()),
         fallback_response,
     ]
-    with patch("glm_mcp.tools.chat.get_client", return_value=mock_client), \
-         patch("glm_mcp.tools.chat.log_usage") as mock_log:
+    with patch("glm_mcp.tools._core.get_client", return_value=mock_client), \
+         patch("glm_mcp.tools._core.log_usage") as mock_log:
         from glm_mcp.tools.chat import glm_chat
         result = glm_chat("Hello", model="GLM-5", auto_fallback=True)
     assert result == "Connection fallback"
