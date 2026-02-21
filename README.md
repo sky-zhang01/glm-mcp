@@ -6,8 +6,8 @@ MCP server for [ZhipuAI GLM](https://open.bigmodel.cn/) — exposes chat and tex
 
 | Tool | Description |
 |------|-------------|
-| `glm_chat` | Text completion using GLM-4-Flash (or any GLM chat model) |
-| `glm_embed` | Text embeddings using Embedding-3 |
+| `glm_chat` | Text completion — default model `glm-4-flash`, pass `model=` to use any GLM chat model (e.g. `glm-5`) |
+| `glm_embed` | Text embeddings — default model `embedding-3`, pass `model=` to override |
 
 ## Quick Start
 
