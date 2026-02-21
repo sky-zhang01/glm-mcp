@@ -6,7 +6,7 @@ MCP server for [ZhipuAI GLM](https://open.bigmodel.cn/) — exposes chat and tex
 
 | Tool | Description |
 |------|-------------|
-| `glm_chat` | Text completion — default model `glm-4-flash`, pass `model=` to use any GLM chat model (e.g. `glm-5`). Supports single-turn and multi-turn (`messages=` parameter). |
+| `glm_chat` | Text completion — default model `glm-4-flash`, pass `model=` to use any GLM chat model (e.g. `glm-5`). Supports single-turn and multi-turn (`messages=` parameter). Auto-fallback on transient errors (429/503/timeout/connection) via `auto_fallback=True` (default). Use `avoid_peak_hours=True` to pre-emptively switch during peak hours (UTC+8 14:00–18:00). |
 | `glm_embed` | Text embeddings — default model `embedding-3`, pass `model=` to override |
 | `glm_usage_summary` | Query token usage from `~/.glm-mcp/usage.jsonl`. Parameters: `days` (default 7), `model` (optional filter). Returns period, total tokens, by_tool, by_model. |
 
@@ -61,7 +61,13 @@ GLM_API_KEY=your_key uv run glm-mcp
 Each tool call appends a JSON line to `~/.glm-mcp/usage.jsonl`:
 
 ```json
-{"timestamp": "...", "tool": "glm_chat", "model": "glm-4-flash", "input_tokens": 13, "output_tokens": 15}
+{"timestamp": "...", "tool": "glm_chat", "model": "glm-4-flash", "input_tokens": 13, "output_tokens": 15, "fallback_used": false, "original_model": null, "fallback_reason": null}
+```
+
+When fallback is triggered:
+
+```json
+{"timestamp": "...", "tool": "glm_chat", "model": "glm-4.7", "input_tokens": 13, "output_tokens": 15, "fallback_used": true, "original_model": "GLM-5", "fallback_reason": "429"}
 ```
 
 ## Development

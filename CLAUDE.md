@@ -11,7 +11,7 @@ src/glm_mcp/
 ├── server.py        # FastMCP server, registers 3 tools
 ├── usage_log.py     # Append-only token usage log (~/.glm-mcp/usage.jsonl)
 └── tools/
-    ├── chat.py           # glm_chat — text completion (single-turn + multi-turn)
+    ├── chat.py           # glm_chat — text completion (single-turn + multi-turn + auto-fallback)
     ├── embed.py          # glm_embed — text embeddings
     └── usage_summary.py  # glm_usage_summary — query ~/.glm-mcp/usage.jsonl
 ```
