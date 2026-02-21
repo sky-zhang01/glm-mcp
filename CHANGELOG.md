@@ -7,6 +7,38 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ---
 
+## [0.5.0] - 2026-02-22
+
+### Added
+
+- **`glm_translate` MCP tool**: pure single-language translation that eliminates the
+  Chinese–Japanese mixed-output problem common with general-purpose LLMs.
+  - Parameters: `text`, `target_lang` (`"ja"` / `"zh"` / `"en"`), `source_lang`
+    (default `"auto"`), `style` (`"formal"` / `"casual"`, default `"formal"`),
+    `model` (default `"glm-4.7"`), `fallback_model`.
+  - System prompt enforces `"Output ONLY the translated text in pure {lang}. Do NOT mix any other language."`.
+  - Shares fallback/client/logging infrastructure with `glm_chat` via new `_core.py`.
+- **`tools/_core.py`** shared module: extracted `_execute_chat_call(tool_name, ...)`,
+  `_do_fallback(tool_name, ...)`, and `_is_peak_hours()` from `chat.py` into a
+  shared internal module, eliminating code duplication across tools.
+
+### Changed
+
+- `tools/chat.py` refactored to a thin wrapper that delegates to `_core._execute_chat_call`.
+  Public API (signature and behavior) is unchanged.
+
+### Tests
+
+- 12 new unit tests (UT-TRN-01 ~ UT-TRN-12) covering: basic translation, formal/casual
+  style prompts, language constraint enforcement, language names in system prompt,
+  fallback passthrough, usage logging with tool="glm_translate", 429 auto-fallback,
+  OpenAI non-instantiation, server registration, and default model.
+- Updated `test_chat.py`: mock patch paths migrated from `glm_mcp.tools.chat.*` to
+  `glm_mcp.tools._core.*` to match the refactored module structure.
+- Total: **82 UT, 100% coverage**.
+
+---
+
 ## [0.4.0] - 2026-02-22
 
 ### Added
