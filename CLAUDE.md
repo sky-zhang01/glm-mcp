@@ -8,11 +8,12 @@ MCP server exposing ZhipuAI GLM capabilities via OpenAI-compatible API.
 src/glm_mcp/
 ├── __init__.py      # Entry point: module-level mcp import, calls mcp.run()
 ├── client.py        # OpenAI client factory (cached via functools.cache)
-├── server.py        # FastMCP server, registers 2 tools
+├── server.py        # FastMCP server, registers 3 tools
 ├── usage_log.py     # Append-only token usage log (~/.glm-mcp/usage.jsonl)
 └── tools/
-    ├── chat.py      # glm_chat — text completion
-    └── embed.py     # glm_embed — text embeddings
+    ├── chat.py           # glm_chat — text completion (single-turn + multi-turn)
+    ├── embed.py          # glm_embed — text embeddings
+    └── usage_summary.py  # glm_usage_summary — query ~/.glm-mcp/usage.jsonl
 ```
 
 ## Tech Stack

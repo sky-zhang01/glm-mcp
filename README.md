@@ -6,8 +6,9 @@ MCP server for [ZhipuAI GLM](https://open.bigmodel.cn/) — exposes chat and tex
 
 | Tool | Description |
 |------|-------------|
-| `glm_chat` | Text completion — default model `glm-4-flash`, pass `model=` to use any GLM chat model (e.g. `glm-5`) |
+| `glm_chat` | Text completion — default model `glm-4-flash`, pass `model=` to use any GLM chat model (e.g. `glm-5`). Supports single-turn and multi-turn (`messages=` parameter). |
 | `glm_embed` | Text embeddings — default model `embedding-3`, pass `model=` to override |
+| `glm_usage_summary` | Query token usage from `~/.glm-mcp/usage.jsonl`. Parameters: `days` (default 7), `model` (optional filter). Returns period, total tokens, by_tool, by_model. |
 
 ## Quick Start
 
@@ -53,6 +54,7 @@ GLM_API_KEY=your_key uv run glm-mcp
 |----------|----------|---------|-------------|
 | `GLM_API_KEY` | Yes | — | ZhipuAI API key |
 | `GLM_BASE_URL` | No | `https://open.bigmodel.cn/api/paas/v4/` | API endpoint override |
+| `GLM_MCP_LOG_DIR` | No | `~/.glm-mcp/` | Directory for `usage.jsonl` token log |
 
 ## Token Usage Logging
 
