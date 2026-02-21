@@ -47,6 +47,20 @@ uv run glm-mcp
 uvx glm-mcp
 ```
 
+## Documentation Update Triggers
+
+When code changes, **all affected documents must be updated before PR/commit**. Cross-check this table at Phase 11 (PR Pre-Submission):
+
+| Code Change | Must Update |
+|-------------|-------------|
+| `glm_chat` parameter added/removed | `README.md` → Tools table + `glm_chat` description |
+| New/removed environment variable | `README.md` → Environment Variables table; `CLAUDE.md` → Environment Variables section |
+| New field in `usage.jsonl` | `README.md` → Token Usage Logging JSON examples |
+| New/removed tool | `README.md` → Tools table; `CLAUDE.md` → Architecture tree |
+| Source file added/renamed/deleted | `CLAUDE.md` → Architecture tree |
+| Fallback behavior changed | `README.md` → `glm_chat` description + Token Usage Logging |
+| New/changed default model | `README.md` → Tools table |
+
 ## Git Conventions
 
 Branch naming: `feat/<name>`, `fix/<name>`, `chore/<name>`
