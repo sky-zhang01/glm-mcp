@@ -6,13 +6,13 @@ MCP server exposing ZhipuAI GLM capabilities via OpenAI-compatible API.
 
 ```
 src/glm_mcp/
-├── __init__.py      # Entry point: calls mcp.run()
-├── client.py        # OpenAI client factory (reads GLM_API_KEY env var)
-├── server.py        # FastMCP server, registers 3 tools
+├── __init__.py      # Entry point: module-level mcp import, calls mcp.run()
+├── client.py        # OpenAI client factory (cached via functools.cache)
+├── server.py        # FastMCP server, registers 2 tools
+├── usage_log.py     # Append-only token usage log (~/.glm-mcp/usage.jsonl)
 └── tools/
     ├── chat.py      # glm_chat — text completion
-    ├── embed.py     # glm_embed — text embeddings
-    └── image.py     # glm_image — image generation (CogView)
+    └── embed.py     # glm_embed — text embeddings
 ```
 
 ## Tech Stack
@@ -24,9 +24,11 @@ src/glm_mcp/
 
 ## Environment Variables
 
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `GLM_API_KEY` | Yes | ZhipuAI API key |
+| Variable | Required | Default | Description |
+|----------|----------|---------|-------------|
+| `GLM_API_KEY` | Yes | — | ZhipuAI API key |
+| `GLM_BASE_URL` | No | `https://open.bigmodel.cn/api/paas/v4/` | Override GLM API base URL |
+| `GLM_MCP_LOG_DIR` | No | `~/.glm-mcp/` | Directory for `usage.jsonl` token log |
 
 ## Commands
 
