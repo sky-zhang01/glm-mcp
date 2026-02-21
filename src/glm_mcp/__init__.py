@@ -1,4 +1,5 @@
-def main() -> None:
-    from glm_mcp.server import mcp
+from glm_mcp.server import mcp
 
+
+def main() -> None:
     mcp.run()

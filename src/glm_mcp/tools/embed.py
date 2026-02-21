@@ -30,7 +30,9 @@ def glm_embed(text: str, model: str = "embedding-3") -> list[float]:
         raise RuntimeError("GLM API request timed out. Please retry.") from exc
     except APIConnectionError as exc:
         logger.error("GLM embed connection error: %s", exc)
-        raise RuntimeError("Could not reach GLM API. Check network connectivity.") from exc
+        raise RuntimeError(
+            "Could not reach GLM API. Check network connectivity."
+        ) from exc
     except APIStatusError as exc:
         logger.error("GLM embed API error %s: %s", exc.status_code, exc.message)
         raise RuntimeError(f"GLM API returned error {exc.status_code}.") from exc
