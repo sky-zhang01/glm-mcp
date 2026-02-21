@@ -2,6 +2,7 @@
 import logging
 
 from openai import APIConnectionError, APIStatusError, APITimeoutError
+from openai.types.chat import ChatCompletionMessageParam
 
 from glm_mcp.client import get_client
 from glm_mcp.usage_log import log_usage
@@ -32,7 +33,7 @@ def glm_chat(
         RuntimeError: If the API call fails or returns empty content.
     """
     client = get_client()
-    messages = []
+    messages: list[ChatCompletionMessageParam] = []
     if system:
         messages.append({"role": "system", "content": system})
     messages.append({"role": "user", "content": message})
@@ -48,11 +49,17 @@ def glm_chat(
         raise RuntimeError("GLM API request timed out. Please retry.") from exc
     except APIConnectionError as exc:
         logger.error("GLM chat connection error: %s", exc)
-        raise RuntimeError("Could not reach GLM API. Check network connectivity.") from exc
+        raise RuntimeError(
+            "Could not reach GLM API. Check network connectivity."
+        ) from exc
     except APIStatusError as exc:
         logger.error("GLM chat API error %s: %s", exc.status_code, exc.message)
         raise RuntimeError(f"GLM API returned error {exc.status_code}.") from exc
-    log_usage("glm_chat", model, response.usage.prompt_tokens, response.usage.completion_tokens)
+    if response.usage is not None:
+        log_usage(
+            "glm_chat", model,
+            response.usage.prompt_tokens, response.usage.completion_tokens,
+        )
     content = response.choices[0].message.content
     if content is None:
         raise RuntimeError("GLM API returned no text content.")

@@ -1,8 +1,9 @@
 """Tests for glm_chat tool."""
+from unittest.mock import MagicMock, patch
+
 import httpx
 import pytest
 from openai import APIConnectionError, APIStatusError, APITimeoutError
-from unittest.mock import MagicMock, patch
 
 
 def _make_request() -> httpx.Request:
@@ -113,7 +114,9 @@ def test_glm_chat_logs_token_usage():
 def test_glm_chat_raises_runtime_error_on_timeout():
     """glm_chat raises RuntimeError when API times out."""
     mock_client = MagicMock()
-    mock_client.chat.completions.create.side_effect = APITimeoutError(request=_make_request())
+    mock_client.chat.completions.create.side_effect = APITimeoutError(
+        request=_make_request()
+    )
 
     with patch("glm_mcp.tools.chat.get_client", return_value=mock_client):
         from glm_mcp.tools.chat import glm_chat
@@ -124,7 +127,9 @@ def test_glm_chat_raises_runtime_error_on_timeout():
 def test_glm_chat_raises_runtime_error_on_connection_error():
     """glm_chat raises RuntimeError when network is unavailable."""
     mock_client = MagicMock()
-    mock_client.chat.completions.create.side_effect = APIConnectionError(request=_make_request())
+    mock_client.chat.completions.create.side_effect = APIConnectionError(
+        request=_make_request()
+    )
 
     with patch("glm_mcp.tools.chat.get_client", return_value=mock_client):
         from glm_mcp.tools.chat import glm_chat
@@ -135,7 +140,9 @@ def test_glm_chat_raises_runtime_error_on_connection_error():
 def test_glm_chat_raises_runtime_error_on_api_status_error():
     """glm_chat raises RuntimeError when API returns error status."""
     mock_client = MagicMock()
-    response = httpx.Response(429, request=_make_request(), content=b'{"error":"rate limited"}')
+    response = httpx.Response(
+        429, request=_make_request(), content=b'{"error":"rate limited"}'
+    )
     mock_client.chat.completions.create.side_effect = APIStatusError(
         "Rate limited", response=response, body=None
     )

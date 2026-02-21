@@ -1,8 +1,9 @@
 """Tests for glm_embed tool."""
+from unittest.mock import MagicMock, patch
+
 import httpx
 import pytest
 from openai import APIConnectionError, APIStatusError, APITimeoutError
-from unittest.mock import MagicMock, patch
 
 
 def _make_request() -> httpx.Request:
@@ -105,7 +106,9 @@ def test_glm_embed_raises_runtime_error_on_timeout():
 def test_glm_embed_raises_runtime_error_on_connection_error():
     """glm_embed raises RuntimeError when network is unavailable."""
     mock_client = MagicMock()
-    mock_client.embeddings.create.side_effect = APIConnectionError(request=_make_request())
+    mock_client.embeddings.create.side_effect = APIConnectionError(
+        request=_make_request()
+    )
 
     with patch("glm_mcp.tools.embed.get_client", return_value=mock_client):
         from glm_mcp.tools.embed import glm_embed
@@ -116,7 +119,9 @@ def test_glm_embed_raises_runtime_error_on_connection_error():
 def test_glm_embed_raises_runtime_error_on_api_status_error():
     """glm_embed raises RuntimeError when API returns error status."""
     mock_client = MagicMock()
-    response = httpx.Response(401, request=_make_request(), content=b'{"error":"unauthorized"}')
+    response = httpx.Response(
+        401, request=_make_request(), content=b'{"error":"unauthorized"}'
+    )
     mock_client.embeddings.create.side_effect = APIStatusError(
         "Unauthorized", response=response, body=None
     )
