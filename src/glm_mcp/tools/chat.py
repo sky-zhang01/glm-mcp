@@ -38,10 +38,12 @@ def glm_chat(
     Args:
         message: The user message (single-turn). Mutually exclusive with messages.
         model: The GLM model to use (default: glm-4-flash).
-        system: Optional system prompt (single-turn only; ignored when messages= is used).
+        system: Optional system prompt (single-turn only; ignored when
+            messages= is used).
         temperature: Sampling temperature between 0.0 and 2.0 (default: 0.7).
         max_tokens: Maximum tokens in the response (default: 2048).
-        messages: Full conversation history (multi-turn). Mutually exclusive with message.
+        messages: Full conversation history (multi-turn). Mutually
+            exclusive with message.
 
     Returns:
         The text content of the model's response.
@@ -52,7 +54,8 @@ def glm_chat(
     """
     if messages is not None and message:
         raise ValueError(
-            "Provide either 'message' (single-turn) or 'messages' (multi-turn), not both."
+            "Provide either 'message' (single-turn) or 'messages' "
+            "(multi-turn), not both."
         )
     if messages is not None and len(messages) == 0:
         raise ValueError("'messages' list must not be empty.")
@@ -88,7 +91,8 @@ def glm_chat(
             kw in error_body.lower() for kw in _CONTEXT_KEYWORDS
         ):
             raise RuntimeError(
-                "Messages exceed model context window. Reduce conversation history length."
+                "Messages exceed model context window. "
+                "Reduce conversation history length."
             ) from exc
         logger.error("GLM chat API error %s: %s", exc.status_code, exc.message)
         raise RuntimeError(f"GLM API returned error {exc.status_code}.") from exc
