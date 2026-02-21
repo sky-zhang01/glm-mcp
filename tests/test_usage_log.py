@@ -75,3 +75,33 @@ def test_log_usage_uses_home_dir_when_glm_mcp_log_dir_not_set(monkeypatch):
     from glm_mcp.usage_log import _get_log_dir
 
     assert _get_log_dir() == Path.home() / ".glm-mcp"
+
+
+# --- v0.4.0: Fallback fields in usage log ---
+
+
+def test_log_usage_with_fallback_fields_writes_to_jsonl(tmp_path):
+    """log_usage with fallback fields writes fallback_used, original_model, fallback_reason to JSONL."""
+    log_dir = tmp_path / ".glm-mcp"
+    with patch("glm_mcp.usage_log._get_log_dir", return_value=log_dir):
+        log_usage(
+            "glm_chat", "glm-4.7", 10, 5,
+            fallback_used=True,
+            original_model="GLM-5",
+            fallback_reason="429",
+        )
+    entry = json.loads((log_dir / "usage.jsonl").read_text().strip())
+    assert entry["fallback_used"] is True
+    assert entry["original_model"] == "GLM-5"
+    assert entry["fallback_reason"] == "429"
+
+
+def test_log_usage_without_fallback_fields_defaults_to_false(tmp_path):
+    """log_usage without fallback fields defaults to fallback_used=False, no extra fields added incorrectly."""
+    log_dir = tmp_path / ".glm-mcp"
+    with patch("glm_mcp.usage_log._get_log_dir", return_value=log_dir):
+        log_usage("glm_chat", "glm-4-flash", 100, 200)
+    entry = json.loads((log_dir / "usage.jsonl").read_text().strip())
+    assert entry.get("fallback_used") is False
+    assert entry.get("original_model") is None
+    assert entry.get("fallback_reason") is None

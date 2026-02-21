@@ -7,6 +7,38 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ---
 
+## [0.4.0] - 2026-02-22
+
+### Added
+
+- **Auto-fallback resilience** (`glm_chat`): automatic model switch when the primary
+  model encounters transient errors.
+  - New parameters: `auto_fallback` (bool, default `True`), `avoid_peak_hours` (bool,
+    default `False`), `fallback_model` (str, default `"glm-4.7"`).
+  - Triggers: HTTP 429 / 503, `APITimeoutError`, `APIConnectionError`.
+  - Pre-emptive mode: `avoid_peak_hours=True` skips primary model during UTC+8 14:00–18:00.
+  - `auto_fallback=False` disables all fallback and restores pre-v0.4.0 behavior.
+- **`FallbackReason` type alias** (`usage_log`): `Literal["429", "503", "peak_hours",
+  "timeout", "connection"]` exported from `glm_mcp.usage_log`.
+
+### Fixed
+
+- `_do_fallback`: added `if response.usage is not None:` guard before `log_usage` call.
+- `_do_fallback`: `log_usage` now called before content check (correct ordering).
+- `_do_fallback`: exception message now includes `type(e).__name__` for easier diagnosis.
+- `_is_peak_hours`: magic numbers `14`/`18` replaced with named constants
+  `_PEAK_HOUR_START` / `_PEAK_HOUR_END`.
+- `_do_fallback`: `client` parameter type changed from `Any` to `OpenAI` (mypy-safe).
+
+### Tests
+
+- 2 new unit tests (UT-CHT-33 ~ UT-CHT-34): timeout/connection auto-fallback.
+- Updated UT-CHT-7/8: explicit `auto_fallback=False` to preserve error-raise semantics.
+- Updated UT-CHT-30: added timezone argument assertion for `_is_peak_hours`.
+- Total: **70 UT, 100% coverage**.
+
+---
+
 ## [0.3.0] - 2026-02-21
 
 ### Added
