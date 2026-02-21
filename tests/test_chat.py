@@ -1,5 +1,12 @@
 """Tests for glm_chat tool."""
+import httpx
+import pytest
+from openai import APIConnectionError, APIStatusError, APITimeoutError
 from unittest.mock import MagicMock, patch
+
+
+def _make_request() -> httpx.Request:
+    return httpx.Request("POST", "https://open.bigmodel.cn/api/paas/v4/chat/completions")
 
 
 def test_glm_chat_returns_text():
@@ -101,3 +108,53 @@ def test_glm_chat_logs_token_usage():
         glm_chat("Hello", model="glm-4-flash")
 
     mock_log.assert_called_once_with("glm_chat", "glm-4-flash", 150, 320)
+
+
+def test_glm_chat_raises_runtime_error_on_timeout():
+    """glm_chat raises RuntimeError when API times out."""
+    mock_client = MagicMock()
+    mock_client.chat.completions.create.side_effect = APITimeoutError(request=_make_request())
+
+    with patch("glm_mcp.tools.chat.get_client", return_value=mock_client):
+        from glm_mcp.tools.chat import glm_chat
+        with pytest.raises(RuntimeError, match="timed out"):
+            glm_chat("Hello")
+
+
+def test_glm_chat_raises_runtime_error_on_connection_error():
+    """glm_chat raises RuntimeError when network is unavailable."""
+    mock_client = MagicMock()
+    mock_client.chat.completions.create.side_effect = APIConnectionError(request=_make_request())
+
+    with patch("glm_mcp.tools.chat.get_client", return_value=mock_client):
+        from glm_mcp.tools.chat import glm_chat
+        with pytest.raises(RuntimeError, match="Could not reach"):
+            glm_chat("Hello")
+
+
+def test_glm_chat_raises_runtime_error_on_api_status_error():
+    """glm_chat raises RuntimeError when API returns error status."""
+    mock_client = MagicMock()
+    response = httpx.Response(429, request=_make_request(), content=b'{"error":"rate limited"}')
+    mock_client.chat.completions.create.side_effect = APIStatusError(
+        "Rate limited", response=response, body=None
+    )
+
+    with patch("glm_mcp.tools.chat.get_client", return_value=mock_client):
+        from glm_mcp.tools.chat import glm_chat
+        with pytest.raises(RuntimeError, match="429"):
+            glm_chat("Hello")
+
+
+def test_glm_chat_raises_runtime_error_when_content_is_none():
+    """glm_chat raises RuntimeError when API returns None content."""
+    mock_response = MagicMock()
+    mock_response.choices[0].message.content = None
+
+    mock_client = MagicMock()
+    mock_client.chat.completions.create.return_value = mock_response
+
+    with patch("glm_mcp.tools.chat.get_client", return_value=mock_client):
+        from glm_mcp.tools.chat import glm_chat
+        with pytest.raises(RuntimeError, match="no text content"):
+            glm_chat("Hello")

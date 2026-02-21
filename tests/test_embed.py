@@ -1,5 +1,12 @@
 """Tests for glm_embed tool."""
+import httpx
+import pytest
+from openai import APIConnectionError, APIStatusError, APITimeoutError
 from unittest.mock import MagicMock, patch
+
+
+def _make_request() -> httpx.Request:
+    return httpx.Request("POST", "https://open.bigmodel.cn/api/paas/v4/embeddings")
 
 
 def test_glm_embed_returns_float_list():
@@ -82,3 +89,39 @@ def test_glm_embed_logs_token_usage():
         glm_embed("Hello", model="embedding-3")
 
     mock_log.assert_called_once_with("glm_embed", "embedding-3", 42, 0)
+
+
+def test_glm_embed_raises_runtime_error_on_timeout():
+    """glm_embed raises RuntimeError when API times out."""
+    mock_client = MagicMock()
+    mock_client.embeddings.create.side_effect = APITimeoutError(request=_make_request())
+
+    with patch("glm_mcp.tools.embed.get_client", return_value=mock_client):
+        from glm_mcp.tools.embed import glm_embed
+        with pytest.raises(RuntimeError, match="timed out"):
+            glm_embed("Hello")
+
+
+def test_glm_embed_raises_runtime_error_on_connection_error():
+    """glm_embed raises RuntimeError when network is unavailable."""
+    mock_client = MagicMock()
+    mock_client.embeddings.create.side_effect = APIConnectionError(request=_make_request())
+
+    with patch("glm_mcp.tools.embed.get_client", return_value=mock_client):
+        from glm_mcp.tools.embed import glm_embed
+        with pytest.raises(RuntimeError, match="Could not reach"):
+            glm_embed("Hello")
+
+
+def test_glm_embed_raises_runtime_error_on_api_status_error():
+    """glm_embed raises RuntimeError when API returns error status."""
+    mock_client = MagicMock()
+    response = httpx.Response(401, request=_make_request(), content=b'{"error":"unauthorized"}')
+    mock_client.embeddings.create.side_effect = APIStatusError(
+        "Unauthorized", response=response, body=None
+    )
+
+    with patch("glm_mcp.tools.embed.get_client", return_value=mock_client):
+        from glm_mcp.tools.embed import glm_embed
+        with pytest.raises(RuntimeError, match="401"):
+            glm_embed("Hello")

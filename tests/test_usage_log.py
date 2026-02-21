@@ -48,8 +48,13 @@ def test_log_usage_appends_to_existing_file(tmp_path):
     assert json.loads(lines[1])["tool"] == "glm_embed"
 
 
-def test_log_usage_silently_ignores_errors():
-    """log_usage does not raise if logging fails (best-effort)."""
+def test_log_usage_does_not_raise_on_error(caplog):
+    """log_usage does not raise if logging fails (best-effort), but logs a warning."""
+    import logging
+
     with patch("glm_mcp.usage_log._LOG_DIR") as mock_dir:
         mock_dir.mkdir.side_effect = OSError("permission denied")
-        log_usage("glm_chat", "glm-4-flash", 100, 200)  # must not raise
+        with caplog.at_level(logging.WARNING, logger="glm_mcp.usage_log"):
+            log_usage("glm_chat", "glm-4-flash", 100, 200)  # must not raise
+
+    assert "failed to write usage log" in caplog.text
