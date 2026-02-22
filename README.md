@@ -1,6 +1,6 @@
 # glm-mcp
 
-MCP server for [ZhipuAI GLM](https://open.bigmodel.cn/) — exposes chat, text embeddings, and translation to Claude Code (and any MCP-compatible client) via the OpenAI-compatible API.
+MCP server for [ZhipuAI GLM](https://open.bigmodel.cn/) — exposes chat, text embeddings, translation, and vision to Claude Code (and any MCP-compatible client) via the OpenAI-compatible API.
 
 ## Tools
 
@@ -10,6 +10,7 @@ MCP server for [ZhipuAI GLM](https://open.bigmodel.cn/) — exposes chat, text e
 | `glm_embed` | Text embeddings — default model `embedding-3`, pass `model=` to override |
 | `glm_usage_summary` | Query token usage from `~/.glm-mcp/usage.jsonl`. Parameters: `days` (default 7), `model` (optional filter). Returns period, total tokens, by_tool, by_model. |
 | `glm_translate` | Pure single-language translation — default model `glm-4.7`. Parameters: `text`, `target_lang` (`"ja"`, `"zh"`, `"en"`), `source_lang` (default `"auto"`), `style` (`"formal"` or `"casual"`, default `"formal"`). Outputs ONLY the target language, solving the mixed Chinese–Japanese output problem common with general LLMs. |
+| `glm_vision` | Multimodal image analysis — default model `glm-4v-plus`. Parameters: `image_url` (HTTP/HTTPS URL or Base64 string), `prompt`, `detail` (`"auto"`, `"low"`, `"high"`), `max_tokens` (default 2048). Auto-fallback to `glm-4v` on 429/503/timeout. Bare Base64 strings are automatically prefixed with `data:image/png;base64,`. |
 
 ## Quick Start
 
