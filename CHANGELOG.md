@@ -7,6 +7,35 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ---
 
+## [0.6.0] - 2026-02-23
+
+### Added
+
+- **`glm_vision` MCP tool**: multimodal image analysis via GLM vision API.
+  - Parameters: `image_url` (HTTP/HTTPS URL or Base64 string), `prompt`,
+    `model` (default `"glm-4v-plus"`), `max_tokens` (default `2048`),
+    `detail` (`"auto"` / `"low"` / `"high"`, default `"auto"`),
+    `fallback_model` (default `"glm-4v"`), `avoid_peak_hours` (bool),
+    `auto_fallback` (bool, default `True`).
+  - Bare Base64 strings (no `data:` prefix) are automatically prefixed with
+    `data:image/png;base64,`.
+  - Auto-fallback on 429 / 503 / timeout / connection errors; `avoid_peak_hours`
+    pre-emptively switches during UTC+8 14:00–18:00.
+  - Input validation: raises `ValueError` when `image_url` or `prompt` is empty,
+    or when `max_tokens` ≤ 0.
+
+### Tests
+
+- 21 new unit tests (UT-VIS-01 ~ UT-VIS-21) covering: basic call, URL passthrough,
+  Base64 prefix injection, fallback trigger, peak-hours pre-emption, `detail`
+  parameter passthrough, max_tokens default, empty image_url/prompt ValueError,
+  non-positive max_tokens ValueError, server registration, model/fallback defaults,
+  and `_DEFAULT_VISION_MODEL` / `_DEFAULT_VISION_FALLBACK_MODEL` / `_VISION_TEMPERATURE`
+  constant values.
+- Total: **103 UT, 100% coverage**.
+
+---
+
 ## [0.5.0] - 2026-02-22
 
 ### Added

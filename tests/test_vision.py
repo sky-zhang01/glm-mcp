@@ -546,3 +546,19 @@ def test_vis_20_uses_get_client_not_direct_openai_and_temperature_is_zero():
     # Design spec: temperature is internally fixed at 0.0
     call_args = mock_client.chat.completions.create.call_args
     assert call_args.kwargs["temperature"] == _SPEC_TEMPERATURE
+
+
+# ---------------------------------------------------------------------------
+# AC-21  max_tokens <= 0 → ValueError
+# ---------------------------------------------------------------------------
+
+def test_vis_21_non_positive_max_tokens_raises_value_error():
+    """UT-VIS-21: max_tokens <= 0 raises ValueError with 'max_tokens'."""
+    _assert_spec_constants()
+
+    with patch("glm_mcp.tools._core.get_client"):
+        from glm_mcp.tools.vision import glm_vision
+        with pytest.raises(ValueError, match="max_tokens"):
+            glm_vision("https://example.com/img.png", "Describe", max_tokens=0)
+        with pytest.raises(ValueError, match="max_tokens"):
+            glm_vision("https://example.com/img.png", "Describe", max_tokens=-1)

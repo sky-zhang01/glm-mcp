@@ -16,7 +16,7 @@ src/glm_mcp/
     ├── embed.py          # glm_embed — text embeddings
     ├── translate.py      # glm_translate — pure single-language translation
     ├── usage_summary.py  # glm_usage_summary — query ~/.glm-mcp/usage.jsonl
-    └── vision.py         # glm_vision — multimodal image analysis (CoT vision, auto-fallback)
+    └── vision.py         # glm_vision — multimodal image analysis (auto-fallback)
 ```
 
 ## Tech Stack
