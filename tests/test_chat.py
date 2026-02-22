@@ -6,7 +6,6 @@ import httpx
 import pytest
 from openai import APIConnectionError, APIStatusError, APITimeoutError
 
-import glm_mcp.tools.chat as chat_module
 import glm_mcp.tools._core as core_module
 
 

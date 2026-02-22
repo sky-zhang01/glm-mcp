@@ -5,9 +5,11 @@ from glm_mcp.tools.chat import glm_chat
 from glm_mcp.tools.embed import glm_embed
 from glm_mcp.tools.translate import glm_translate
 from glm_mcp.tools.usage_summary import glm_usage_summary
+from glm_mcp.tools.vision import glm_vision
 
 mcp = FastMCP("GLM MCP Server")
 mcp.add_tool(glm_chat)
 mcp.add_tool(glm_embed)
 mcp.add_tool(glm_usage_summary)
 mcp.add_tool(glm_translate)
+mcp.add_tool(glm_vision)

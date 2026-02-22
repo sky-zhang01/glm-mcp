@@ -1,7 +1,7 @@
 [project]
 name = "glm-mcp"
-version = "0.5.0"
-description = "MCP server for ZhipuAI GLM — chat, text embeddings, and translation"
+version = "0.6.0"
+description = "MCP server for ZhipuAI GLM — chat, text embeddings, translation, and vision"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
