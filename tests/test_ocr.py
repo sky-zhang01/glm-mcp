@@ -233,3 +233,16 @@ def test_ocr_15_data_uri_passthrough():
     req = mock_urlopen.call_args[0][0]
     body = json.loads(req.data)
     assert body["file"] == data_uri
+
+
+def test_ocr_16_invalid_json_raises():
+    """UT-OCR-16: API response with invalid JSON raises RuntimeError."""
+    mock_resp = MagicMock()
+    mock_resp.read.return_value = b"not valid json {"
+    mock_urlopen = MagicMock(return_value=mock_resp)
+
+    with patch("glm_mcp.tools.ocr.get_api_config", return_value=(_API_KEY, _BASE_URL)), \
+         patch("urllib.request.urlopen", mock_urlopen):
+        from glm_mcp.tools.ocr import glm_ocr
+        with pytest.raises(RuntimeError, match="invalid JSON"):
+            glm_ocr("https://example.com/doc.pdf")

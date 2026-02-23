@@ -77,3 +77,36 @@ def test_get_client_caches_instance_for_same_credentials(monkeypatch):
     client1 = get_client()
     client2 = get_client()
     assert client1 is client2
+
+
+def test_get_api_config_raises_when_key_missing(monkeypatch):
+    """get_api_config raises OSError when GLM_API_KEY is not set."""
+    monkeypatch.delenv("GLM_API_KEY", raising=False)
+
+    from glm_mcp.client import get_api_config
+
+    with pytest.raises(OSError, match="GLM_API_KEY"):
+        get_api_config()
+
+
+def test_get_api_config_returns_tuple(monkeypatch):
+    """get_api_config returns (api_key, base_url) tuple when API key is set."""
+    monkeypatch.setenv("GLM_API_KEY", "test-key-abc")
+    monkeypatch.delenv("GLM_BASE_URL", raising=False)
+
+    from glm_mcp.client import get_api_config
+
+    api_key, base_url = get_api_config()
+    assert api_key == "test-key-abc"
+    assert base_url == "https://open.bigmodel.cn/api/paas/v4/"
+
+
+def test_get_api_config_uses_custom_base_url(monkeypatch):
+    """get_api_config uses GLM_BASE_URL env var when set."""
+    monkeypatch.setenv("GLM_API_KEY", "test-key")
+    monkeypatch.setenv("GLM_BASE_URL", "https://custom.example.com/v1/")
+
+    from glm_mcp.client import get_api_config
+
+    api_key, base_url = get_api_config()
+    assert base_url == "https://custom.example.com/v1/"
