@@ -1,8 +1,8 @@
-"""Tests for glm_vision tool — RED phase (UT-VIS-01 ~ UT-VIS-20).
+"""Tests for glm_vision tool — UT-VIS-01 ~ UT-VIS-22.
 
 Design spec target values (all tests assert these):
-  _DEFAULT_VISION_MODEL          = "glm-4v-plus"
-  _DEFAULT_VISION_FALLBACK_MODEL = "glm-4v"
+  _DEFAULT_VISION_MODEL          = "glm-4.6v"
+  _DEFAULT_VISION_FALLBACK_MODEL = "glm-4.6v-flash"
   internal temperature           = 0.0
 
 Every test imports glm_mcp.tools.vision and checks at least one design-spec
@@ -16,8 +16,8 @@ import pytest
 from openai import APIConnectionError, APIStatusError, APITimeoutError
 
 # Design-spec constants (authoritative values for this test suite)
-_SPEC_DEFAULT_MODEL = "glm-4v-plus"
-_SPEC_DEFAULT_FALLBACK = "glm-4v"
+_SPEC_DEFAULT_MODEL = "glm-4.6v"
+_SPEC_DEFAULT_FALLBACK = "glm-4.6v-flash"
 _SPEC_TEMPERATURE = 0.0
 
 
@@ -30,8 +30,8 @@ def _assert_spec_constants():
 
     This helper is called at the top of every test so every test is anchored
     to the design-spec values. Any test will FAIL until vision.py defines
-    _DEFAULT_VISION_MODEL = "glm-4v-plus" and
-    _DEFAULT_VISION_FALLBACK_MODEL = "glm-4v".
+    _DEFAULT_VISION_MODEL = "glm-4.6v" and
+    _DEFAULT_VISION_FALLBACK_MODEL = "glm-4.6v-flash".
     """
     import glm_mcp.tools.vision as vision_module
     assert vision_module._DEFAULT_VISION_MODEL == _SPEC_DEFAULT_MODEL, (
@@ -116,11 +116,11 @@ def test_vis_03_bare_base64_auto_prefixed():
 
 
 # ---------------------------------------------------------------------------
-# AC-4  Default model is "glm-4v-plus"
+# AC-4  Default model is "glm-4.6v"
 # ---------------------------------------------------------------------------
 
 def test_vis_04_default_model_is_glm_4v_plus():
-    """UT-VIS-04: Default model is 'glm-4v-plus'."""
+    """UT-VIS-04: Default model is 'glm-4.6v'."""
     _assert_spec_constants()
 
     mock_response = MagicMock()
@@ -188,7 +188,7 @@ def test_vis_06_detail_param_in_image_url_object():
 # ---------------------------------------------------------------------------
 
 def test_vis_07_usage_logged_with_tool_name_glm_vision():
-    """UT-VIS-07: Usage is logged with tool='glm_vision' and model='glm-4v-plus' (default)."""
+    """UT-VIS-07: Usage is logged with tool='glm_vision' and model='glm-4.6v' (default)."""
     _assert_spec_constants()
 
     mock_response = MagicMock()
@@ -291,11 +291,11 @@ def test_vis_11_none_content_raises_runtime_error():
 
 
 # ---------------------------------------------------------------------------
-# AC-12  429 + auto_fallback=True → uses fallback_model ("glm-4v" default)
+# AC-12  429 + auto_fallback=True → uses fallback_model ("glm-4.6v-flash" default)
 # ---------------------------------------------------------------------------
 
 def test_vis_12_429_auto_fallback_uses_default_fallback_model():
-    """UT-VIS-12: 429 + auto_fallback=True triggers switch to default fallback model 'glm-4v'."""
+    """UT-VIS-12: 429 + auto_fallback=True triggers switch to default fallback model 'glm-4.6v-flash'."""
     _assert_spec_constants()
 
     mock_client = MagicMock()
@@ -325,11 +325,11 @@ def test_vis_12_429_auto_fallback_uses_default_fallback_model():
 
 
 # ---------------------------------------------------------------------------
-# AC-13  503 + auto_fallback=True → uses fallback_model ("glm-4v" default)
+# AC-13  503 + auto_fallback=True → uses fallback_model ("glm-4.6v-flash" default)
 # ---------------------------------------------------------------------------
 
 def test_vis_13_503_auto_fallback_uses_default_fallback_model():
-    """UT-VIS-13: 503 + auto_fallback=True triggers switch to default fallback model 'glm-4v'."""
+    """UT-VIS-13: 503 + auto_fallback=True triggers switch to default fallback model 'glm-4.6v-flash'."""
     _assert_spec_constants()
 
     mock_client = MagicMock()
@@ -363,7 +363,7 @@ def test_vis_13_503_auto_fallback_uses_default_fallback_model():
 # ---------------------------------------------------------------------------
 
 def test_vis_14_avoid_peak_hours_during_peak_uses_fallback():
-    """UT-VIS-14: avoid_peak_hours=True + peak hours → skips primary, uses fallback 'glm-4v'."""
+    """UT-VIS-14: avoid_peak_hours=True + peak hours → skips primary, uses fallback 'glm-4.6v-flash'."""
     _assert_spec_constants()
 
     fallback_response = MagicMock()
@@ -401,7 +401,7 @@ def test_vis_14_avoid_peak_hours_during_peak_uses_fallback():
 # ---------------------------------------------------------------------------
 
 def test_vis_15_custom_fallback_model_is_respected():
-    """UT-VIS-15: Custom fallback_model parameter overrides the default 'glm-4v'."""
+    """UT-VIS-15: Custom fallback_model parameter overrides the default 'glm-4.6v-flash'."""
     _assert_spec_constants()
 
     mock_client = MagicMock()
@@ -562,3 +562,28 @@ def test_vis_21_non_positive_max_tokens_raises_value_error():
             glm_vision("https://example.com/img.png", "Describe", max_tokens=0)
         with pytest.raises(ValueError, match="max_tokens"):
             glm_vision("https://example.com/img.png", "Describe", max_tokens=-1)
+
+
+# ---------------------------------------------------------------------------
+# AC-22  Empty string content (reasoning model token exhaustion) → RuntimeError
+# ---------------------------------------------------------------------------
+
+def test_vis_22_empty_string_content_raises_runtime_error():
+    """UT-VIS-22: Response with content='' (empty string) raises RuntimeError.
+
+    Reasoning models like glm-4.6v return empty string '' instead of None
+    when max_tokens is too low to produce output after reasoning tokens are
+    consumed. The safety check must treat '' as falsy, not rely on `is None`.
+    """
+    _assert_spec_constants()
+
+    mock_response = MagicMock()
+    mock_response.choices[0].message.content = ""
+
+    mock_client = MagicMock()
+    mock_client.chat.completions.create.return_value = mock_response
+
+    with patch("glm_mcp.tools._core.get_client", return_value=mock_client):
+        from glm_mcp.tools.vision import glm_vision
+        with pytest.raises(RuntimeError, match="no text content"):
+            glm_vision("https://example.com/img.png", "Describe")

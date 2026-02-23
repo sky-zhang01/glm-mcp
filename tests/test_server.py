@@ -3,12 +3,13 @@ import asyncio
 from unittest.mock import MagicMock, patch
 
 
-def test_server_registers_five_tools():
-    """FastMCP server exposes glm_chat, glm_embed, glm_usage_summary, glm_translate, and glm_vision tools."""
+def test_server_registers_six_tools():
+    """FastMCP server exposes glm_chat, glm_embed, glm_ocr, glm_usage_summary, glm_translate, and glm_vision tools."""
     from glm_mcp.server import mcp
 
     assert asyncio.run(mcp.get_tool("glm_chat")) is not None
     assert asyncio.run(mcp.get_tool("glm_embed")) is not None
+    assert asyncio.run(mcp.get_tool("glm_ocr")) is not None
     assert asyncio.run(mcp.get_tool("glm_usage_summary")) is not None
     assert asyncio.run(mcp.get_tool("glm_translate")) is not None
     assert asyncio.run(mcp.get_tool("glm_vision")) is not None

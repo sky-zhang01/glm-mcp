@@ -5,8 +5,8 @@ from openai.types.chat import ChatCompletionMessageParam
 
 from glm_mcp.tools import _core
 
-_DEFAULT_VISION_MODEL = "glm-4v-plus"
-_DEFAULT_VISION_FALLBACK_MODEL = "glm-4v"
+_DEFAULT_VISION_MODEL = "glm-4.6v"
+_DEFAULT_VISION_FALLBACK_MODEL = "glm-4.6v-flash"
 _VISION_TEMPERATURE = 0.0
 
 
@@ -29,11 +29,11 @@ def glm_vision(
     Args:
         image_url: HTTP/HTTPS URL or Base64-encoded image string.
         prompt: Instruction or question about the image.
-        model: Vision model to use. Defaults to ``glm-4v-plus``.
+        model: Vision model to use. Defaults to ``glm-4.6v``.
         max_tokens: Maximum tokens in the response. Must be > 0.
         detail: Image detail level for the API: "auto", "low", or "high".
         fallback_model: Model used when fallback is triggered. Defaults to
-            ``glm-4v`` (preserves image context).
+            ``glm-4.6v-flash`` (same-generation free variant).
         avoid_peak_hours: Pre-emptively switch to fallback during peak hours
             (UTC+8 14:00–18:00) when auto_fallback is also True.
         auto_fallback: Enable automatic fallback on retriable errors

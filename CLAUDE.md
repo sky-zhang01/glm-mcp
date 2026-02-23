@@ -7,13 +7,14 @@ MCP server exposing ZhipuAI GLM capabilities via OpenAI-compatible API.
 ```
 src/glm_mcp/
 ├── __init__.py      # Entry point: module-level mcp import, calls mcp.run()
-├── client.py        # OpenAI client factory (cached via functools.cache)
-├── server.py        # FastMCP server, registers 5 tools
+├── client.py        # OpenAI client factory (cached via functools.cache) + get_api_config()
+├── server.py        # FastMCP server, registers 6 tools
 ├── usage_log.py     # Append-only token usage log (~/.glm-mcp/usage.jsonl)
 └── tools/
     ├── _core.py          # Shared core: _execute_chat_call, _do_fallback, _is_peak_hours
     ├── chat.py           # glm_chat — text completion (single-turn + multi-turn + auto-fallback)
     ├── embed.py          # glm_embed — text embeddings
+    ├── ocr.py            # glm_ocr — document/image OCR via layout_parsing endpoint (urllib)
     ├── translate.py      # glm_translate — pure single-language translation
     ├── usage_summary.py  # glm_usage_summary — query ~/.glm-mcp/usage.jsonl
     └── vision.py         # glm_vision — multimodal image analysis (auto-fallback)

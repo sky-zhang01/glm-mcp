@@ -74,7 +74,7 @@ def _do_fallback(
                 fallback_reason=fallback_reason,
             )
         content: str | None = response.choices[0].message.content
-        if content is None:
+        if not content:
             raise RuntimeError("GLM API returned no text content in fallback response.")
         return content
     except RuntimeError:
@@ -171,6 +171,6 @@ def _execute_chat_call(
             fallback_used=False, original_model=None, fallback_reason=None,
         )
     content = response.choices[0].message.content
-    if content is None:
+    if not content:
         raise RuntimeError("GLM API returned no text content.")
     return content
