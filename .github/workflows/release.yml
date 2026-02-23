@@ -1,0 +1,36 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Extract changelog section
+        run: |
+          python3 -c "
+          import re, os, sys
+          version = os.environ['GITHUB_REF_NAME'].lstrip('v')
+          with open('CHANGELOG.md') as f:
+              text = f.read()
+          m = re.search(r'(?m)^## \[' + re.escape(version) + r'\].*?(?=^## \[|\Z)', text, re.DOTALL)
+          if not m:
+              sys.exit(f'No CHANGELOG entry for {version}')
+          open('notes.txt', 'w').write(m.group(0).strip())
+          "
+
+      - name: Create GitHub Release
+        run: |
+          gh release create "$GITHUB_REF_NAME" \
+            --title "$GITHUB_REF_NAME" \
+            --notes-file notes.txt
+        env:
+          GH_TOKEN: ${{ github.token }}
