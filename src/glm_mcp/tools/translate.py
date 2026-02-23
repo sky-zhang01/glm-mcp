@@ -14,7 +14,6 @@ _STYLE_DESCS = {
     "casual": "in a casual, conversational register",
 }
 
-_TRANSLATE_TEMPERATURE = 0.1
 _TRANSLATE_MAX_TOKENS = 4096
 
 
@@ -36,6 +35,8 @@ def glm_translate(
     style: str = "formal",
     model: str = "glm-4.7",
     fallback_model: str | None = None,
+    temperature: float = 1.0,
+    top_p: float | None = 0.8,
 ) -> str:
     """Translate text into the target language using GLM.
 
@@ -51,6 +52,11 @@ def glm_translate(
         model: GLM model to use (default: 'glm-4.7').
         fallback_model: Model to switch to on retriable errors.
             Defaults to 'glm-4.7' when None.
+        temperature: Sampling temperature (0.0–2.0). Defaults to 1.0 (neutral
+            value for GLM-4.7 Plan B where top_p is the primary control).
+        top_p: Nucleus sampling probability (0.0–1.0). Defaults to 0.8
+            (GLM-4.7 Plan B stable technical output). When None, omitted
+            from the API call.
 
     Returns:
         The translated text in the target language.
@@ -68,6 +74,6 @@ def glm_translate(
     )
     return _core._execute_chat_call(
         "glm_translate", model, api_messages,
-        _TRANSLATE_TEMPERATURE, _TRANSLATE_MAX_TOKENS,
-        actual_fallback_model, False, True,
+        temperature, _TRANSLATE_MAX_TOKENS,
+        actual_fallback_model, False, True, top_p,
     )

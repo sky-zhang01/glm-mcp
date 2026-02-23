@@ -7,6 +7,71 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ---
 
+## [0.8.0] - 2026-02-23
+
+### Added
+
+- **`temperature` and `top_p` parameters** exposed on `glm_chat`, `glm_translate`, and `glm_vision`
+  with research-backed defaults from GLM official documentation.
+  - `glm_chat`: `temperature=0.7` (existing, unchanged), `top_p=0.95` (new; GLM-5 recommended 0.9–0.95).
+  - `glm_translate`: `temperature=1.0` (neutral, top_p is the primary control), `top_p=0.8` (new;
+    GLM-4.7 Plan B stable technical output).
+  - `glm_vision`: `temperature=0.2` (focused stable analysis, previously a private constant `_VISION_TEMPERATURE`),
+    `top_p=0.9` (new).
+  - All tools: pass `top_p=None` to omit the parameter from the API call entirely.
+
+### Changed
+
+- `glm_translate`: `temperature` promoted from private constant `_TRANSLATE_TEMPERATURE=0.1` to
+  a public parameter defaulting to `1.0` (GLM-4.7 Plan B neutral value).
+- `glm_vision`: `temperature` promoted from private constant `_VISION_TEMPERATURE=0.0` to a public
+  parameter defaulting to `0.2`.
+- `_core._execute_chat_call` and `_core._do_fallback`: added `top_p: float | None = None` parameter;
+  uses conditional kwargs (`**{"top_p": top_p} if top_p is not None else {}`) to cleanly omit the
+  parameter when not needed.
+
+### Tests
+
+- 12 new unit tests covering default and custom values for `temperature` and `top_p`, plus `top_p=None`
+  omission: UT-VIS-23~26 (vision), UT-TRN-13~17 (translate), UT-CHT-35~37 (chat).
+- UT-VIS-20 updated: function renamed from `...temperature_is_zero` to `...default_temperature`;
+  assertion updated to `temperature == 0.2`.
+
+---
+
+## [0.7.0] - 2026-02-23
+
+### Added
+
+- **`glm_ocr` MCP tool**: document and image OCR via `POST /api/paas/v4/layout_parsing`
+  (non-OpenAI-compatible endpoint, implemented with `urllib.request`).
+  - Parameters: `file` (HTTP/HTTPS URL, Base64 string, `data:` URI, or local file path),
+    `model` (default `"glm-ocr"`), `start_page_id`, `end_page_id`.
+  - Returns extracted text as Markdown (`md_results`).
+  - Local files auto-encoded as Base64; bare Base64 strings prefixed with
+    `data:application/pdf;base64,`; MIME auto-detected from extension.
+  - No fallback (only one OCR model available).
+- **`client.get_api_config()`** helper: returns `(api_key, base_url)` tuple for tools
+  that make direct HTTP calls outside the OpenAI SDK.
+
+### Changed
+
+- `glm_vision` default model: `"glm-4v-plus"` → `"glm-4.6v"` (106B MoE flagship vision model).
+- `glm_vision` default fallback model: `"glm-4v"` → `"glm-4.6v-flash"` (same-generation free variant).
+- `_core._execute_chat_call` and `_core._do_fallback`: empty-string content check changed from
+  `if content is None` to `if not content` — prevents silent failure with reasoning models
+  that return `""` when `max_tokens` is too low.
+
+### Tests
+
+- 15 new unit tests (UT-OCR-01 ~ UT-OCR-15) covering URL/base64/local-file inputs, pagination,
+  usage logging, error handling, and server registration.
+- Updated `test_vision.py` spec constants: `_SPEC_DEFAULT_MODEL = "glm-4.6v"`,
+  `_SPEC_DEFAULT_FALLBACK = "glm-4.6v-flash"`.
+- New UT-VIS-22: verifies empty-string content (`""`) triggers RuntimeError.
+
+---
+
 ## [0.6.0] - 2026-02-23
 
 ### Added

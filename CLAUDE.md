@@ -58,6 +58,7 @@ When code changes, **all affected documents must be updated before PR/commit**. 
 | Code Change | Must Update |
 |-------------|-------------|
 | `glm_chat` parameter added/removed | `README.md` → Tools table + `glm_chat` description |
+| `temperature` / `top_p` defaults changed on any tool | `README.md` → Tools table (sampling line for that tool) |
 | New/removed environment variable | `README.md` → Environment Variables table; `CLAUDE.md` → Environment Variables section |
 | New field in `usage.jsonl` | `README.md` → Token Usage Logging JSON examples |
 | New/removed tool | `README.md` → Tools table; `CLAUDE.md` → Architecture tree |

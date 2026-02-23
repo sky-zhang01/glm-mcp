@@ -212,3 +212,83 @@ def test_glm_translate_default_model_is_glm_4_7():
 
     call_args = mock_client.chat.completions.create.call_args
     assert call_args.kwargs["model"] == "glm-4.7"
+
+
+# UT-TRN-13: default temperature=1.0 passed to API
+def test_glm_translate_default_temperature_is_1_0():
+    """UT-TRN-13: glm_translate passes temperature=1.0 by default (GLM-4.7 Plan B neutral)."""
+    mock_response = MagicMock()
+    mock_response.choices[0].message.content = "翻訳"
+    mock_client = MagicMock()
+    mock_client.chat.completions.create.return_value = mock_response
+
+    with patch("glm_mcp.tools._core.get_client", return_value=mock_client):
+        from glm_mcp.tools.translate import glm_translate
+        glm_translate("Hello", "ja")
+
+    call_args = mock_client.chat.completions.create.call_args
+    assert call_args.kwargs["temperature"] == 1.0
+
+
+# UT-TRN-14: custom temperature is passed through to API
+def test_glm_translate_custom_temperature_passed_to_api():
+    """UT-TRN-14: glm_translate forwards caller-supplied temperature to the API."""
+    mock_response = MagicMock()
+    mock_response.choices[0].message.content = "翻訳"
+    mock_client = MagicMock()
+    mock_client.chat.completions.create.return_value = mock_response
+
+    with patch("glm_mcp.tools._core.get_client", return_value=mock_client):
+        from glm_mcp.tools.translate import glm_translate
+        glm_translate("Hello", "ja", temperature=0.3)
+
+    call_args = mock_client.chat.completions.create.call_args
+    assert call_args.kwargs["temperature"] == 0.3
+
+
+# UT-TRN-15: default top_p=0.8 passed to API
+def test_glm_translate_default_top_p_is_0_8():
+    """UT-TRN-15: glm_translate passes top_p=0.8 by default (GLM-4.7 Plan B stable)."""
+    mock_response = MagicMock()
+    mock_response.choices[0].message.content = "翻訳"
+    mock_client = MagicMock()
+    mock_client.chat.completions.create.return_value = mock_response
+
+    with patch("glm_mcp.tools._core.get_client", return_value=mock_client):
+        from glm_mcp.tools.translate import glm_translate
+        glm_translate("Hello", "ja")
+
+    call_args = mock_client.chat.completions.create.call_args
+    assert call_args.kwargs.get("top_p") == 0.8
+
+
+# UT-TRN-16: custom top_p is passed through to API
+def test_glm_translate_custom_top_p_passed_to_api():
+    """UT-TRN-16: glm_translate forwards caller-supplied top_p to the API."""
+    mock_response = MagicMock()
+    mock_response.choices[0].message.content = "翻訳"
+    mock_client = MagicMock()
+    mock_client.chat.completions.create.return_value = mock_response
+
+    with patch("glm_mcp.tools._core.get_client", return_value=mock_client):
+        from glm_mcp.tools.translate import glm_translate
+        glm_translate("Hello", "ja", top_p=0.5)
+
+    call_args = mock_client.chat.completions.create.call_args
+    assert call_args.kwargs.get("top_p") == 0.5
+
+
+# UT-TRN-17: top_p=None → "top_p" must NOT be present in the API call kwargs
+def test_glm_translate_top_p_none_not_sent_to_api():
+    """UT-TRN-17: When top_p=None, the 'top_p' key must not appear in the API call kwargs."""
+    mock_response = MagicMock()
+    mock_response.choices[0].message.content = "翻訳"
+    mock_client = MagicMock()
+    mock_client.chat.completions.create.return_value = mock_response
+
+    with patch("glm_mcp.tools._core.get_client", return_value=mock_client):
+        from glm_mcp.tools.translate import glm_translate
+        glm_translate("Hello", "ja", top_p=None)
+
+    call_args = mock_client.chat.completions.create.call_args
+    assert "top_p" not in call_args.kwargs
