@@ -37,6 +37,7 @@ def _do_fallback(
     max_tokens: int,
     original_model: str,
     fallback_reason: FallbackReason,
+    top_p: float | None = None,
 ) -> str:
     """Execute one fallback API call. Raises RuntimeError if fallback also fails.
 
@@ -49,6 +50,7 @@ def _do_fallback(
         max_tokens: Maximum tokens in response.
         original_model: The originally requested model name (for logging).
         fallback_reason: Why fallback was triggered.
+        top_p: Nucleus sampling probability. When None, not passed to the API.
 
     Returns:
         The text content of the fallback model's response.
@@ -57,11 +59,13 @@ def _do_fallback(
         RuntimeError: If the fallback call fails for any reason.
     """
     try:
-        response = client.chat.completions.create(
+        extra: dict[str, object] = {"top_p": top_p} if top_p is not None else {}
+        response = client.chat.completions.create(  # type: ignore[call-overload]
             model=fallback_model,
             messages=messages,
             temperature=temperature,
             max_tokens=max_tokens,
+            **extra,
         )
         if response.usage is not None:
             log_usage(
@@ -95,6 +99,7 @@ def _execute_chat_call(
     fallback_model: str,
     avoid_peak_hours: bool,
     auto_fallback: bool,
+    top_p: float | None = None,
 ) -> str:
     """Execute a chat completion call with fallback support.
 
@@ -109,6 +114,7 @@ def _execute_chat_call(
             to fallback model during peak hours (UTC+8 14:00-18:00).
         auto_fallback: When False, disables all fallback logic and raises
             RuntimeError on retriable errors.
+        top_p: Nucleus sampling probability. When None, not passed to the API.
 
     Returns:
         The text content of the model's response.
@@ -121,28 +127,30 @@ def _execute_chat_call(
     if auto_fallback and avoid_peak_hours and _is_peak_hours():
         return _do_fallback(
             tool_name, client, fallback_model, messages,
-            temperature, max_tokens, model, "peak_hours",
+            temperature, max_tokens, model, "peak_hours", top_p,
         )
 
+    extra: dict[str, object] = {"top_p": top_p} if top_p is not None else {}
     try:
-        response = client.chat.completions.create(
+        response = client.chat.completions.create(  # type: ignore[call-overload]
             model=model,
             messages=messages,
             temperature=temperature,
             max_tokens=max_tokens,
+            **extra,
         )
     except APITimeoutError as exc:
         if auto_fallback:
             return _do_fallback(
                 tool_name, client, fallback_model, messages,
-                temperature, max_tokens, model, "timeout",
+                temperature, max_tokens, model, "timeout", top_p,
             )
         raise RuntimeError("GLM API request timed out. Please retry.") from exc
     except APIConnectionError as exc:
         if auto_fallback:
             return _do_fallback(
                 tool_name, client, fallback_model, messages,
-                temperature, max_tokens, model, "connection",
+                temperature, max_tokens, model, "connection", top_p,
             )
         raise RuntimeError(
             "Could not reach GLM API. Check network connectivity."
@@ -161,6 +169,7 @@ def _execute_chat_call(
                 tool_name, client, fallback_model, messages,
                 temperature, max_tokens, model,
                 str(exc.status_code),  # type: ignore[arg-type]
+                top_p,
             )
         raise RuntimeError(f"GLM API returned error {exc.status_code}.") from exc
 
@@ -170,7 +179,7 @@ def _execute_chat_call(
             response.usage.prompt_tokens, response.usage.completion_tokens,
             fallback_used=False, original_model=None, fallback_reason=None,
         )
-    content = response.choices[0].message.content
+    content: str | None = response.choices[0].message.content
     if not content:
         raise RuntimeError("GLM API returned no text content.")
     return content

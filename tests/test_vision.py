@@ -1,9 +1,10 @@
-"""Tests for glm_vision tool — UT-VIS-01 ~ UT-VIS-22.
+"""Tests for glm_vision tool — UT-VIS-01 ~ UT-VIS-26.
 
 Design spec target values (all tests assert these):
   _DEFAULT_VISION_MODEL          = "glm-4.6v"
   _DEFAULT_VISION_FALLBACK_MODEL = "glm-4.6v-flash"
-  internal temperature           = 0.0
+  exposed temperature default    = 0.2
+  exposed top_p default          = 0.9
 
 Every test imports glm_mcp.tools.vision and checks at least one design-spec
 constant so that EVERY test fails until the implementation is updated.
@@ -18,7 +19,8 @@ from openai import APIConnectionError, APIStatusError, APITimeoutError
 # Design-spec constants (authoritative values for this test suite)
 _SPEC_DEFAULT_MODEL = "glm-4.6v"
 _SPEC_DEFAULT_FALLBACK = "glm-4.6v-flash"
-_SPEC_TEMPERATURE = 0.0
+_SPEC_TEMPERATURE = 0.2
+_SPEC_TOP_P = 0.9
 
 
 def _make_request() -> httpx.Request:
@@ -521,11 +523,11 @@ def test_vis_19_tool_registered_in_server():
 
 # ---------------------------------------------------------------------------
 # AC-20  Does NOT instantiate OpenAI client directly (uses get_client)
-#         And verifies internal temperature=0.0 per design spec
+#         And verifies default temperature=0.2 per design spec
 # ---------------------------------------------------------------------------
 
-def test_vis_20_uses_get_client_not_direct_openai_and_temperature_is_zero():
-    """UT-VIS-20: glm_vision uses get_client (not OpenAI directly) and passes temperature=0.0."""
+def test_vis_20_uses_get_client_not_direct_openai_and_default_temperature():
+    """UT-VIS-20: glm_vision uses get_client (not OpenAI directly) and passes temperature=0.2 by default."""
     _assert_spec_constants()
 
     mock_response = MagicMock()
@@ -543,7 +545,7 @@ def test_vis_20_uses_get_client_not_direct_openai_and_temperature_is_zero():
     mock_get_client.assert_called()
     mock_openai_cls.assert_not_called()
 
-    # Design spec: temperature is internally fixed at 0.0
+    # Design spec: default temperature is 0.2 (exposed parameter, not internal constant)
     call_args = mock_client.chat.completions.create.call_args
     assert call_args.kwargs["temperature"] == _SPEC_TEMPERATURE
 
@@ -587,3 +589,91 @@ def test_vis_22_empty_string_content_raises_runtime_error():
         from glm_mcp.tools.vision import glm_vision
         with pytest.raises(RuntimeError, match="no text content"):
             glm_vision("https://example.com/img.png", "Describe")
+
+
+# ---------------------------------------------------------------------------
+# AC-23  Custom temperature is passed through to the API call
+# ---------------------------------------------------------------------------
+
+def test_vis_23_custom_temperature_passed_to_api():
+    """UT-VIS-23: glm_vision forwards caller-supplied temperature to the API."""
+    _assert_spec_constants()
+
+    mock_response = MagicMock()
+    mock_response.choices[0].message.content = "Result"
+
+    mock_client = MagicMock()
+    mock_client.chat.completions.create.return_value = mock_response
+
+    with patch("glm_mcp.tools._core.get_client", return_value=mock_client):
+        from glm_mcp.tools.vision import glm_vision
+        glm_vision("https://example.com/img.png", "Describe", temperature=0.5)
+
+    call_args = mock_client.chat.completions.create.call_args
+    assert call_args.kwargs["temperature"] == 0.5
+
+
+# ---------------------------------------------------------------------------
+# AC-24  Default top_p=0.9 is passed to the API call
+# ---------------------------------------------------------------------------
+
+def test_vis_24_default_top_p_passed_to_api():
+    """UT-VIS-24: glm_vision passes top_p=0.9 by default."""
+    _assert_spec_constants()
+
+    mock_response = MagicMock()
+    mock_response.choices[0].message.content = "Result"
+
+    mock_client = MagicMock()
+    mock_client.chat.completions.create.return_value = mock_response
+
+    with patch("glm_mcp.tools._core.get_client", return_value=mock_client):
+        from glm_mcp.tools.vision import glm_vision
+        glm_vision("https://example.com/img.png", "Describe")
+
+    call_args = mock_client.chat.completions.create.call_args
+    assert call_args.kwargs.get("top_p") == _SPEC_TOP_P
+
+
+# ---------------------------------------------------------------------------
+# AC-25  Custom top_p is passed through to the API call
+# ---------------------------------------------------------------------------
+
+def test_vis_25_custom_top_p_passed_to_api():
+    """UT-VIS-25: glm_vision forwards caller-supplied top_p to the API."""
+    _assert_spec_constants()
+
+    mock_response = MagicMock()
+    mock_response.choices[0].message.content = "Result"
+
+    mock_client = MagicMock()
+    mock_client.chat.completions.create.return_value = mock_response
+
+    with patch("glm_mcp.tools._core.get_client", return_value=mock_client):
+        from glm_mcp.tools.vision import glm_vision
+        glm_vision("https://example.com/img.png", "Describe", top_p=0.5)
+
+    call_args = mock_client.chat.completions.create.call_args
+    assert call_args.kwargs.get("top_p") == 0.5
+
+
+# ---------------------------------------------------------------------------
+# AC-26  top_p=None → top_p kwarg must NOT be present in the API call
+# ---------------------------------------------------------------------------
+
+def test_vis_26_top_p_none_not_sent_to_api():
+    """UT-VIS-26: When top_p=None, the 'top_p' key must not appear in the API call kwargs."""
+    _assert_spec_constants()
+
+    mock_response = MagicMock()
+    mock_response.choices[0].message.content = "Result"
+
+    mock_client = MagicMock()
+    mock_client.chat.completions.create.return_value = mock_response
+
+    with patch("glm_mcp.tools._core.get_client", return_value=mock_client):
+        from glm_mcp.tools.vision import glm_vision
+        glm_vision("https://example.com/img.png", "Describe", top_p=None)
+
+    call_args = mock_client.chat.completions.create.call_args
+    assert "top_p" not in call_args.kwargs

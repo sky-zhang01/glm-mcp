@@ -7,7 +7,6 @@ from glm_mcp.tools import _core
 
 _DEFAULT_VISION_MODEL = "glm-4.6v"
 _DEFAULT_VISION_FALLBACK_MODEL = "glm-4.6v-flash"
-_VISION_TEMPERATURE = 0.0
 
 
 def glm_vision(
@@ -19,6 +18,8 @@ def glm_vision(
     fallback_model: str | None = None,
     avoid_peak_hours: bool = False,
     auto_fallback: bool = True,
+    temperature: float = 0.2,
+    top_p: float | None = 0.9,
 ) -> str:
     """Analyze an image using the GLM multimodal vision API.
 
@@ -38,6 +39,10 @@ def glm_vision(
             (UTC+8 14:00–18:00) when auto_fallback is also True.
         auto_fallback: Enable automatic fallback on retriable errors
             (429, 503, timeout, connection errors).
+        temperature: Sampling temperature (0.0–2.0). Defaults to 0.2 for
+            focused, stable visual analysis.
+        top_p: Nucleus sampling probability (0.0–1.0). Defaults to 0.9.
+            When None, the parameter is omitted from the API call.
 
     Returns:
         The model's text response describing or analyzing the image.
@@ -82,9 +87,10 @@ def glm_vision(
         "glm_vision",
         model,
         messages,
-        _VISION_TEMPERATURE,
+        temperature,
         max_tokens,
         actual_fallback_model,
         avoid_peak_hours,
         auto_fallback,
+        top_p,
     )

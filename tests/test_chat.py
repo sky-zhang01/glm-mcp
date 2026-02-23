@@ -644,3 +644,48 @@ def test_glm_chat_auto_fallback_on_connection_error():
         "glm_chat", "glm-4.7", 8, 4,
         fallback_used=True, original_model="GLM-5", fallback_reason="connection",
     )
+
+
+def test_glm_chat_default_top_p_is_0_95():
+    """UT-CHT-35: glm_chat passes top_p=0.95 by default (GLM-5 demo recommendation)."""
+    mock_response = MagicMock()
+    mock_response.choices[0].message.content = "Hello"
+    mock_client = MagicMock()
+    mock_client.chat.completions.create.return_value = mock_response
+
+    with patch("glm_mcp.tools._core.get_client", return_value=mock_client):
+        from glm_mcp.tools.chat import glm_chat
+        glm_chat("Hello")
+
+    call_args = mock_client.chat.completions.create.call_args
+    assert call_args.kwargs.get("top_p") == 0.95
+
+
+def test_glm_chat_custom_top_p_passed_to_api():
+    """UT-CHT-36: glm_chat forwards caller-supplied top_p to the API."""
+    mock_response = MagicMock()
+    mock_response.choices[0].message.content = "Hello"
+    mock_client = MagicMock()
+    mock_client.chat.completions.create.return_value = mock_response
+
+    with patch("glm_mcp.tools._core.get_client", return_value=mock_client):
+        from glm_mcp.tools.chat import glm_chat
+        glm_chat("Hello", top_p=0.7)
+
+    call_args = mock_client.chat.completions.create.call_args
+    assert call_args.kwargs.get("top_p") == 0.7
+
+
+def test_glm_chat_top_p_none_not_sent_to_api():
+    """UT-CHT-37: When top_p=None, the 'top_p' key must not appear in the API call kwargs."""
+    mock_response = MagicMock()
+    mock_response.choices[0].message.content = "Hello"
+    mock_client = MagicMock()
+    mock_client.chat.completions.create.return_value = mock_response
+
+    with patch("glm_mcp.tools._core.get_client", return_value=mock_client):
+        from glm_mcp.tools.chat import glm_chat
+        glm_chat("Hello", top_p=None)
+
+    call_args = mock_client.chat.completions.create.call_args
+    assert "top_p" not in call_args.kwargs

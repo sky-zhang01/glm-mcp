@@ -16,6 +16,7 @@ def glm_chat(
     fallback_model: str | None = None,
     avoid_peak_hours: bool = False,
     auto_fallback: bool = True,
+    top_p: float | None = 0.95,
 ) -> str:
     """Send a message to the GLM chat API and return the response text.
 
@@ -47,6 +48,9 @@ def glm_chat(
         auto_fallback: Global fallback switch. When False, disables all fallback
             logic and raises RuntimeError on 429/503/timeout/connection errors
             (original behavior).
+        top_p: Nucleus sampling probability (0.0–1.0). Defaults to 0.95
+            (GLM-5 recommended range 0.9–0.95 for general chat). When None,
+            omitted from the API call.
 
     Returns:
         The text content of the model's response.
@@ -77,5 +81,5 @@ def glm_chat(
 
     return _core._execute_chat_call(
         "glm_chat", model, api_messages, temperature, max_tokens,
-        actual_fallback_model, avoid_peak_hours, auto_fallback,
+        actual_fallback_model, avoid_peak_hours, auto_fallback, top_p,
     )
