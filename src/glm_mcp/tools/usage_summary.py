@@ -1,11 +1,10 @@
 """glm_usage_summary MCP tool — query token usage from usage.jsonl."""
 import json
+from collections import defaultdict
 from datetime import datetime, timedelta, timezone
 from typing import Any
 
-from glm_mcp.usage_log import _get_log_dir
-
-_LOG_FILE = "usage.jsonl"
+from glm_mcp.usage_log import LOG_FILE, get_log_dir
 
 
 def glm_usage_summary(
@@ -37,15 +36,15 @@ def glm_usage_summary(
         "by_model": {},
     }
 
-    log_path = _get_log_dir() / _LOG_FILE
+    log_path = get_log_dir() / LOG_FILE
     if not log_path.exists():
         return zero_summary
 
     total_input = 0
     total_output = 0
     record_count = 0
-    by_tool: dict[str, int] = {}
-    by_model: dict[str, int] = {}
+    by_tool: defaultdict[str, int] = defaultdict(int)
+    by_model: defaultdict[str, int] = defaultdict(int)
 
     with log_path.open(encoding="utf-8") as f:
         for line in f:
@@ -76,8 +75,8 @@ def glm_usage_summary(
             total_input += input_tokens
             total_output += output_tokens
             record_count += 1
-            by_tool[tool_name] = by_tool.get(tool_name, 0) + 1
-            by_model[model_name] = by_model.get(model_name, 0) + 1
+            by_tool[tool_name] += 1
+            by_model[model_name] += 1
 
     return {
         "period": f"{period_start} ~ {period_end}",

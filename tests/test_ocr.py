@@ -6,7 +6,7 @@ from unittest.mock import MagicMock, mock_open, patch
 
 import pytest
 
-_API_KEY = "test-api-key"
+_MOCK_CRED = "test-api-key"
 _BASE_URL = "https://open.bigmodel.cn/api/paas/v4/"
 _SAMPLE_MD = "# Document\n\nParagraph text here."
 
@@ -28,6 +28,8 @@ def _make_urlopen_mock(
 
     mock_resp = MagicMock()
     mock_resp.read.return_value = response_data
+    mock_resp.__enter__ = MagicMock(return_value=mock_resp)
+    mock_resp.__exit__ = MagicMock(return_value=False)
     return MagicMock(return_value=mock_resp)
 
 
@@ -35,7 +37,7 @@ def test_ocr_01_url_returns_str():
     """UT-OCR-01: HTTPS URL input returns the markdown string from md_results."""
     mock_urlopen = _make_urlopen_mock()
 
-    with patch("glm_mcp.tools.ocr.get_api_config", return_value=(_API_KEY, _BASE_URL)), \
+    with patch("glm_mcp.tools.ocr.get_api_config", return_value=(_MOCK_CRED, _BASE_URL)), \
          patch("urllib.request.urlopen", mock_urlopen):
         from glm_mcp.tools.ocr import glm_ocr
         result = glm_ocr("https://example.com/doc.pdf")
@@ -50,7 +52,7 @@ def test_ocr_02_base64_returns_str():
     data_uri = f"data:application/pdf;base64,{b64_data}"
     mock_urlopen = _make_urlopen_mock()
 
-    with patch("glm_mcp.tools.ocr.get_api_config", return_value=(_API_KEY, _BASE_URL)), \
+    with patch("glm_mcp.tools.ocr.get_api_config", return_value=(_MOCK_CRED, _BASE_URL)), \
          patch("urllib.request.urlopen", mock_urlopen):
         from glm_mcp.tools.ocr import glm_ocr
         result = glm_ocr(data_uri)
@@ -64,7 +66,7 @@ def test_ocr_03_local_file_auto_encodes():
     fake_content = b"PDF content here"
     mock_urlopen = _make_urlopen_mock()
 
-    with patch("glm_mcp.tools.ocr.get_api_config", return_value=(_API_KEY, _BASE_URL)), \
+    with patch("glm_mcp.tools.ocr.get_api_config", return_value=(_MOCK_CRED, _BASE_URL)), \
          patch("urllib.request.urlopen", mock_urlopen), \
          patch("os.path.isfile", return_value=True), \
          patch("builtins.open", mock_open(read_data=fake_content)):
@@ -82,7 +84,7 @@ def test_ocr_04_default_model():
     """UT-OCR-04: Default model sent to API is 'glm-ocr'."""
     mock_urlopen = _make_urlopen_mock()
 
-    with patch("glm_mcp.tools.ocr.get_api_config", return_value=(_API_KEY, _BASE_URL)), \
+    with patch("glm_mcp.tools.ocr.get_api_config", return_value=(_MOCK_CRED, _BASE_URL)), \
          patch("urllib.request.urlopen", mock_urlopen):
         from glm_mcp.tools.ocr import glm_ocr
         glm_ocr("https://example.com/doc.pdf")
@@ -96,7 +98,7 @@ def test_ocr_05_custom_model():
     """UT-OCR-05: Custom model parameter is passed to the API."""
     mock_urlopen = _make_urlopen_mock()
 
-    with patch("glm_mcp.tools.ocr.get_api_config", return_value=(_API_KEY, _BASE_URL)), \
+    with patch("glm_mcp.tools.ocr.get_api_config", return_value=(_MOCK_CRED, _BASE_URL)), \
          patch("urllib.request.urlopen", mock_urlopen):
         from glm_mcp.tools.ocr import glm_ocr
         glm_ocr("https://example.com/doc.pdf", model="glm-ocr-v2")
@@ -110,7 +112,7 @@ def test_ocr_06_usage_logged():
     """UT-OCR-06: log_usage called with tool='glm_ocr' and correct token counts."""
     mock_urlopen = _make_urlopen_mock(prompt_tokens=50, completion_tokens=100)
 
-    with patch("glm_mcp.tools.ocr.get_api_config", return_value=(_API_KEY, _BASE_URL)), \
+    with patch("glm_mcp.tools.ocr.get_api_config", return_value=(_MOCK_CRED, _BASE_URL)), \
          patch("urllib.request.urlopen", mock_urlopen), \
          patch("glm_mcp.tools.ocr.log_usage") as mock_log:
         from glm_mcp.tools.ocr import glm_ocr
@@ -123,7 +125,7 @@ def test_ocr_07_pagination_params():
     """UT-OCR-07: start_page_id and end_page_id are included in the request body."""
     mock_urlopen = _make_urlopen_mock()
 
-    with patch("glm_mcp.tools.ocr.get_api_config", return_value=(_API_KEY, _BASE_URL)), \
+    with patch("glm_mcp.tools.ocr.get_api_config", return_value=(_MOCK_CRED, _BASE_URL)), \
          patch("urllib.request.urlopen", mock_urlopen):
         from glm_mcp.tools.ocr import glm_ocr
         glm_ocr("https://example.com/doc.pdf", start_page_id=2, end_page_id=5)
@@ -136,7 +138,7 @@ def test_ocr_07_pagination_params():
 
 def test_ocr_08_empty_file_raises():
     """UT-OCR-08: Empty file string raises ValueError."""
-    with patch("glm_mcp.tools.ocr.get_api_config", return_value=(_API_KEY, _BASE_URL)):
+    with patch("glm_mcp.tools.ocr.get_api_config", return_value=(_MOCK_CRED, _BASE_URL)):
         from glm_mcp.tools.ocr import glm_ocr
         with pytest.raises(ValueError, match="file"):
             glm_ocr("")
@@ -146,7 +148,7 @@ def test_ocr_09_empty_md_results_raises():
     """UT-OCR-09: Response with empty md_results raises RuntimeError."""
     mock_urlopen = _make_urlopen_mock(md_results="")
 
-    with patch("glm_mcp.tools.ocr.get_api_config", return_value=(_API_KEY, _BASE_URL)), \
+    with patch("glm_mcp.tools.ocr.get_api_config", return_value=(_MOCK_CRED, _BASE_URL)), \
          patch("urllib.request.urlopen", mock_urlopen):
         from glm_mcp.tools.ocr import glm_ocr
         with pytest.raises(RuntimeError, match="no OCR content"):
@@ -164,7 +166,7 @@ def test_ocr_10_http_error_raises():
         fp=None,
     )
 
-    with patch("glm_mcp.tools.ocr.get_api_config", return_value=(_API_KEY, _BASE_URL)), \
+    with patch("glm_mcp.tools.ocr.get_api_config", return_value=(_MOCK_CRED, _BASE_URL)), \
          patch("urllib.request.urlopen", mock_urlopen):
         from glm_mcp.tools.ocr import glm_ocr
         with pytest.raises(RuntimeError, match="429"):
@@ -176,7 +178,7 @@ def test_ocr_11_timeout_raises():
     mock_urlopen = MagicMock()
     mock_urlopen.side_effect = TimeoutError("timed out")
 
-    with patch("glm_mcp.tools.ocr.get_api_config", return_value=(_API_KEY, _BASE_URL)), \
+    with patch("glm_mcp.tools.ocr.get_api_config", return_value=(_MOCK_CRED, _BASE_URL)), \
          patch("urllib.request.urlopen", mock_urlopen):
         from glm_mcp.tools.ocr import glm_ocr
         with pytest.raises(RuntimeError, match="timed out"):
@@ -188,7 +190,7 @@ def test_ocr_12_connection_error_raises():
     mock_urlopen = MagicMock()
     mock_urlopen.side_effect = urllib.error.URLError(reason="Name or service not known")
 
-    with patch("glm_mcp.tools.ocr.get_api_config", return_value=(_API_KEY, _BASE_URL)), \
+    with patch("glm_mcp.tools.ocr.get_api_config", return_value=(_MOCK_CRED, _BASE_URL)), \
          patch("urllib.request.urlopen", mock_urlopen):
         from glm_mcp.tools.ocr import glm_ocr
         with pytest.raises(RuntimeError, match="Could not reach"):
@@ -209,7 +211,7 @@ def test_ocr_14_bare_base64_auto_prefix():
     b64_data = base64.b64encode(b"fake pdf content").decode()
     mock_urlopen = _make_urlopen_mock()
 
-    with patch("glm_mcp.tools.ocr.get_api_config", return_value=(_API_KEY, _BASE_URL)), \
+    with patch("glm_mcp.tools.ocr.get_api_config", return_value=(_MOCK_CRED, _BASE_URL)), \
          patch("urllib.request.urlopen", mock_urlopen):
         from glm_mcp.tools.ocr import glm_ocr
         glm_ocr(b64_data)
@@ -225,7 +227,7 @@ def test_ocr_15_data_uri_passthrough():
     data_uri = f"data:image/png;base64,{b64_data}"
     mock_urlopen = _make_urlopen_mock()
 
-    with patch("glm_mcp.tools.ocr.get_api_config", return_value=(_API_KEY, _BASE_URL)), \
+    with patch("glm_mcp.tools.ocr.get_api_config", return_value=(_MOCK_CRED, _BASE_URL)), \
          patch("urllib.request.urlopen", mock_urlopen):
         from glm_mcp.tools.ocr import glm_ocr
         glm_ocr(data_uri)
@@ -239,9 +241,11 @@ def test_ocr_16_invalid_json_raises():
     """UT-OCR-16: API response with invalid JSON raises RuntimeError."""
     mock_resp = MagicMock()
     mock_resp.read.return_value = b"not valid json {"
+    mock_resp.__enter__ = MagicMock(return_value=mock_resp)
+    mock_resp.__exit__ = MagicMock(return_value=False)
     mock_urlopen = MagicMock(return_value=mock_resp)
 
-    with patch("glm_mcp.tools.ocr.get_api_config", return_value=(_API_KEY, _BASE_URL)), \
+    with patch("glm_mcp.tools.ocr.get_api_config", return_value=(_MOCK_CRED, _BASE_URL)), \
          patch("urllib.request.urlopen", mock_urlopen):
         from glm_mcp.tools.ocr import glm_ocr
         with pytest.raises(RuntimeError, match="invalid JSON"):

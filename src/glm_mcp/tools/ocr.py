@@ -74,8 +74,8 @@ def glm_ocr(
     )
 
     try:
-        resp = urllib.request.urlopen(req, timeout=_REQUEST_TIMEOUT)
-        raw = resp.read()
+        with urllib.request.urlopen(req, timeout=_REQUEST_TIMEOUT) as resp:
+            payload = json.load(resp)
     except urllib.error.HTTPError as exc:
         raise RuntimeError(
             f"GLM OCR API returned HTTP {exc.code}: {exc.reason}"
@@ -86,9 +86,6 @@ def glm_ocr(
         raise RuntimeError(
             f"Could not reach GLM OCR API: {exc.reason}"
         ) from exc
-
-    try:
-        payload = json.loads(raw)
     except json.JSONDecodeError as exc:
         raise RuntimeError(
             f"GLM OCR API returned invalid JSON: {exc}"

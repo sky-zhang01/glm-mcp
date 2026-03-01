@@ -4,6 +4,7 @@ import logging
 from openai import APIConnectionError, APIStatusError, APITimeoutError
 
 from glm_mcp.client import get_client
+from glm_mcp.tools._core import _ERR_CONNECTION, _ERR_TIMEOUT
 from glm_mcp.usage_log import log_usage
 
 logger = logging.getLogger(__name__)
@@ -27,12 +28,10 @@ def glm_embed(text: str, model: str = "embedding-3") -> list[float]:
         response = client.embeddings.create(model=model, input=[text])
     except APITimeoutError as exc:
         logger.error("GLM embed timed out: %s", exc)
-        raise RuntimeError("GLM API request timed out. Please retry.") from exc
+        raise RuntimeError(_ERR_TIMEOUT) from exc
     except APIConnectionError as exc:
         logger.error("GLM embed connection error: %s", exc)
-        raise RuntimeError(
-            "Could not reach GLM API. Check network connectivity."
-        ) from exc
+        raise RuntimeError(_ERR_CONNECTION) from exc
     except APIStatusError as exc:
         logger.error("GLM embed API error %s: %s", exc.status_code, exc.message)
         raise RuntimeError(f"GLM API returned error {exc.status_code}.") from exc
