@@ -2,7 +2,7 @@
 import logging
 from datetime import datetime, timedelta, timezone
 
-from openai import APIConnectionError, APIStatusError, APITimeoutError, OpenAI
+from openai import APIConnectionError, APIStatusError, APITimeoutError
 from openai.types.chat import ChatCompletionMessageParam
 
 from glm_mcp.client import get_client
@@ -16,6 +16,12 @@ _RETRIABLE_STATUSES = (429, 503)
 _TZ_UTC8 = timezone(timedelta(hours=8))
 _PEAK_HOUR_START = 14
 _PEAK_HOUR_END = 18
+_ERR_TIMEOUT = "GLM API request timed out. Please retry."
+_ERR_CONNECTION = "Could not reach GLM API. Check network connectivity."
+
+
+def _build_llm_kwargs(top_p: float | None) -> dict[str, object]:
+    return {"top_p": top_p} if top_p is not None else {}
 
 
 def _is_peak_hours() -> bool:
@@ -30,7 +36,6 @@ def _is_peak_hours() -> bool:
 
 def _do_fallback(
     tool_name: str,
-    client: OpenAI,
     fallback_model: str,
     messages: list[ChatCompletionMessageParam],
     temperature: float,
@@ -43,7 +48,6 @@ def _do_fallback(
 
     Args:
         tool_name: Name of the calling tool (for usage logging).
-        client: The OpenAI-compatible client instance.
         fallback_model: Model name to use for the fallback call.
         messages: Message list to send to the API.
         temperature: Sampling temperature.
@@ -59,13 +63,13 @@ def _do_fallback(
         RuntimeError: If the fallback call fails for any reason.
     """
     try:
-        extra: dict[str, object] = {"top_p": top_p} if top_p is not None else {}
+        client = get_client()
         response = client.chat.completions.create(  # type: ignore[call-overload]
             model=fallback_model,
             messages=messages,
             temperature=temperature,
             max_tokens=max_tokens,
-            **extra,
+            **_build_llm_kwargs(top_p),
         )
         if response.usage is not None:
             log_usage(
@@ -126,35 +130,32 @@ def _execute_chat_call(
 
     if auto_fallback and avoid_peak_hours and _is_peak_hours():
         return _do_fallback(
-            tool_name, client, fallback_model, messages,
+            tool_name, fallback_model, messages,
             temperature, max_tokens, model, "peak_hours", top_p,
         )
 
-    extra: dict[str, object] = {"top_p": top_p} if top_p is not None else {}
     try:
         response = client.chat.completions.create(  # type: ignore[call-overload]
             model=model,
             messages=messages,
             temperature=temperature,
             max_tokens=max_tokens,
-            **extra,
+            **_build_llm_kwargs(top_p),
         )
     except APITimeoutError as exc:
         if auto_fallback:
             return _do_fallback(
-                tool_name, client, fallback_model, messages,
+                tool_name, fallback_model, messages,
                 temperature, max_tokens, model, "timeout", top_p,
             )
-        raise RuntimeError("GLM API request timed out. Please retry.") from exc
+        raise RuntimeError(_ERR_TIMEOUT) from exc
     except APIConnectionError as exc:
         if auto_fallback:
             return _do_fallback(
-                tool_name, client, fallback_model, messages,
+                tool_name, fallback_model, messages,
                 temperature, max_tokens, model, "connection", top_p,
             )
-        raise RuntimeError(
-            "Could not reach GLM API. Check network connectivity."
-        ) from exc
+        raise RuntimeError(_ERR_CONNECTION) from exc
     except APIStatusError as exc:
         error_body = str(exc.body) if exc.body else str(exc.message)
         if exc.status_code in (400, 413) and any(
@@ -166,7 +167,7 @@ def _execute_chat_call(
             ) from exc
         if auto_fallback and exc.status_code in _RETRIABLE_STATUSES:
             return _do_fallback(
-                tool_name, client, fallback_model, messages,
+                tool_name, fallback_model, messages,
                 temperature, max_tokens, model,
                 str(exc.status_code),  # type: ignore[arg-type]
                 top_p,

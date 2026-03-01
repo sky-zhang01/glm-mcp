@@ -1,4 +1,5 @@
 """Token usage logging for GLM API calls."""
+import functools
 import json
 import logging
 import os
@@ -6,14 +7,15 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Literal
 
-_LOG_FILE = "usage.jsonl"
+LOG_FILE = "usage.jsonl"
 
 logger = logging.getLogger(__name__)
 
 FallbackReason = Literal["429", "503", "peak_hours", "timeout", "connection"]
 
 
-def _get_log_dir() -> Path:
+@functools.cache
+def get_log_dir() -> Path:
     """Return the directory for writing usage logs.
 
     Uses GLM_MCP_LOG_DIR environment variable when set,
@@ -48,7 +50,7 @@ def log_usage(
         Best-effort: failures are logged as warnings so callers are never broken.
     """
     try:
-        log_dir = _get_log_dir()
+        log_dir = get_log_dir()
         log_dir.mkdir(parents=True, exist_ok=True)
         entry = {
             "timestamp": datetime.now(timezone.utc).isoformat(),
@@ -60,7 +62,7 @@ def log_usage(
             "original_model": original_model,
             "fallback_reason": fallback_reason,
         }
-        with (log_dir / _LOG_FILE).open("a", encoding="utf-8") as f:
+        with (log_dir / LOG_FILE).open("a", encoding="utf-8") as f:
             f.write(json.dumps(entry) + "\n")
     except Exception as exc:  # noqa: BLE001 — intentional best-effort
         logger.warning("glm-mcp: failed to write usage log: %s", exc)

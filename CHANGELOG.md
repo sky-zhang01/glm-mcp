@@ -7,6 +7,25 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ---
 
+## [0.8.1] - 2026-03-01
+
+### Changed
+
+- **Code optimization** — internal refactor with no functional changes:
+  - `client.py`: Simplified `get_api_config()` and `_get_cached_client()` implementations.
+  - `tools/_core.py`: Streamlined `_execute_chat_call`, `_do_fallback`, `_is_peak_hours` logic.
+  - `tools/embed.py`: Reduced boilerplate in `glm_embed`.
+  - `tools/ocr.py`: Tightened `_prepare_file` and response handling.
+  - `tools/usage_summary.py`: Cleaner filtering and aggregation logic.
+  - `usage_log.py`: Simplified `log_usage` append path.
+
+### Tests
+
+- Updated `tests/test_ocr.py`, `tests/test_usage_log.py`, `tests/test_usage_summary.py` to match
+  refactored internals (patch targets, mock protocol). All 135 unit tests pass (100% coverage).
+
+---
+
 ## [0.8.0] - 2026-02-23
 
 ### Added

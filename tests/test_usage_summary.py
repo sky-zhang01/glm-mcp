@@ -37,7 +37,7 @@ def test_missing_log_file_returns_zero_summary(tmp_path):
     log_dir = tmp_path / ".glm-mcp"
     # do NOT create the file
 
-    with patch("glm_mcp.tools.usage_summary._get_log_dir", return_value=log_dir):
+    with patch("glm_mcp.tools.usage_summary.get_log_dir", return_value=log_dir):
         result = glm_usage_summary()
 
     assert result["record_count"] == 0
@@ -61,7 +61,7 @@ def test_aggregates_records_within_default_window(tmp_path):
     ]
     _write_log(log_dir, entries)
 
-    with patch("glm_mcp.tools.usage_summary._get_log_dir", return_value=log_dir):
+    with patch("glm_mcp.tools.usage_summary.get_log_dir", return_value=log_dir):
         result = glm_usage_summary(days=7)
 
     assert result["record_count"] == 2
@@ -85,7 +85,7 @@ def test_model_filter_returns_only_matching_records(tmp_path):
     ]
     _write_log(log_dir, entries)
 
-    with patch("glm_mcp.tools.usage_summary._get_log_dir", return_value=log_dir):
+    with patch("glm_mcp.tools.usage_summary.get_log_dir", return_value=log_dir):
         result = glm_usage_summary(days=7, model="glm-4-flash")
 
     assert result["record_count"] == 1
@@ -106,7 +106,7 @@ def test_no_records_in_range_returns_zero_summary(tmp_path):
     ]
     _write_log(log_dir, entries)
 
-    with patch("glm_mcp.tools.usage_summary._get_log_dir", return_value=log_dir):
+    with patch("glm_mcp.tools.usage_summary.get_log_dir", return_value=log_dir):
         result = glm_usage_summary(days=7)
 
     assert result["record_count"] == 0
@@ -124,7 +124,7 @@ def test_period_field_format(tmp_path):
     log_dir = tmp_path / ".glm-mcp"
     _write_log(log_dir, [])  # empty but file exists
 
-    with patch("glm_mcp.tools.usage_summary._get_log_dir", return_value=log_dir):
+    with patch("glm_mcp.tools.usage_summary.get_log_dir", return_value=log_dir):
         result = glm_usage_summary(days=7)
 
     period = result["period"]
@@ -150,7 +150,7 @@ def test_by_tool_and_by_model_exclude_zero_count_keys(tmp_path):
     ]
     _write_log(log_dir, entries)
 
-    with patch("glm_mcp.tools.usage_summary._get_log_dir", return_value=log_dir):
+    with patch("glm_mcp.tools.usage_summary.get_log_dir", return_value=log_dir):
         result = glm_usage_summary(days=7)
 
     assert "glm_embed" not in result["by_tool"]
@@ -172,7 +172,7 @@ def test_malformed_lines_are_skipped(tmp_path):
                              "input_tokens": 10, "output_tokens": 20}) + "\n")
         f.write(json.dumps({"timestamp": _ts(0)}) + "\n")  # missing fields
 
-    with patch("glm_mcp.tools.usage_summary._get_log_dir", return_value=log_dir):
+    with patch("glm_mcp.tools.usage_summary.get_log_dir", return_value=log_dir):
         result = glm_usage_summary(days=7)
 
     # only the valid line counts
@@ -193,7 +193,7 @@ def test_days_1_includes_only_today(tmp_path):
     ]
     _write_log(log_dir, entries)
 
-    with patch("glm_mcp.tools.usage_summary._get_log_dir", return_value=log_dir):
+    with patch("glm_mcp.tools.usage_summary.get_log_dir", return_value=log_dir):
         result = glm_usage_summary(days=1)
 
     assert result["record_count"] == 1
@@ -213,7 +213,7 @@ def test_multiple_records_same_tool_accumulate(tmp_path):
     ]
     _write_log(log_dir, entries)
 
-    with patch("glm_mcp.tools.usage_summary._get_log_dir", return_value=log_dir):
+    with patch("glm_mcp.tools.usage_summary.get_log_dir", return_value=log_dir):
         result = glm_usage_summary(days=7)
 
     assert result["record_count"] == 2
@@ -252,7 +252,7 @@ def test_empty_lines_in_file_are_skipped(tmp_path):
                              "input_tokens": 10, "output_tokens": 20}) + "\n")
         f.write("   \n")  # whitespace-only line
 
-    with patch("glm_mcp.tools.usage_summary._get_log_dir", return_value=log_dir):
+    with patch("glm_mcp.tools.usage_summary.get_log_dir", return_value=log_dir):
         result = glm_usage_summary(days=7)
 
     assert result["record_count"] == 1
@@ -276,7 +276,7 @@ def test_invalid_timestamp_format_is_skipped(tmp_path):
         f.write(json.dumps({"timestamp": _ts(0), "tool": "glm_chat", "model": "glm-4-flash",
                              "input_tokens": 10, "output_tokens": 20}) + "\n")
 
-    with patch("glm_mcp.tools.usage_summary._get_log_dir", return_value=log_dir):
+    with patch("glm_mcp.tools.usage_summary.get_log_dir", return_value=log_dir):
         result = glm_usage_summary(days=7)
 
     assert result["record_count"] == 1
