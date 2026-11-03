@@ -3,7 +3,7 @@ import asyncio
 import inspect
 from unittest.mock import MagicMock, patch
 
-import httpx
+import httpx2 as httpx
 from openai import APIStatusError
 
 
