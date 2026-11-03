@@ -22,7 +22,7 @@ src/glm_mcp/
 
 ## Tech Stack
 
-- Python ≥ 3.10
+- Python ≥ 3.11
 - [fastmcp](https://github.com/jlowin/fastmcp) ≥ 2.14 — MCP server framework
 - [openai](https://github.com/openai/openai-python) ≥ 1.0 — HTTP client (GLM is OpenAI-compatible)
 - GLM base URL: `https://open.bigmodel.cn/api/paas/v4/`
