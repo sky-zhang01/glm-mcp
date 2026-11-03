@@ -3,7 +3,7 @@ import functools
 import json
 import logging
 import os
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Literal
 
@@ -53,7 +53,7 @@ def log_usage(
         log_dir = get_log_dir()
         log_dir.mkdir(parents=True, exist_ok=True)
         entry = {
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
             "tool": tool,
             "model": model,
             "input_tokens": input_tokens,

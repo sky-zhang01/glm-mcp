@@ -1,7 +1,7 @@
 """Tests for glm_embed tool."""
 from unittest.mock import MagicMock, patch
 
-import httpx
+import httpx2 as httpx
 import pytest
 from openai import APIConnectionError, APIStatusError, APITimeoutError
 

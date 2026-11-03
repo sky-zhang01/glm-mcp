@@ -1,7 +1,7 @@
 """glm_usage_summary MCP tool — query token usage from usage.jsonl."""
 import json
 from collections import defaultdict
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 from glm_mcp.usage_log import LOG_FILE, get_log_dir
@@ -21,7 +21,7 @@ def glm_usage_summary(
         Dict with keys: period, total_input_tokens, total_output_tokens,
         by_tool, by_model, record_count.
     """
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     cutoff = now - timedelta(days=days)
 
     period_start = cutoff.date().isoformat()

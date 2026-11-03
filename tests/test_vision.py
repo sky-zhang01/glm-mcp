@@ -12,7 +12,7 @@ constant so that EVERY test fails until the implementation is updated.
 import asyncio
 from unittest.mock import MagicMock, patch
 
-import httpx
+import httpx2 as httpx
 import pytest
 from openai import APIConnectionError, APIStatusError, APITimeoutError
 
